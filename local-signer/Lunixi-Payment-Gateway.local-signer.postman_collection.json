@@ -1,0 +1,338 @@
+{
+  "info": {
+    "_postman_id": "84c0f732-715c-4ed4-9b3b-dbd96a4dbe38",
+    "name": "Lunixi Payment Gateway",
+    "description": "Professional Postman collection for Lunixi payment integrations. Tokens are minted automatically through the local signer helper.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{access_token}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const expiresAt = Number(pm.environment.get('access_token_expires_at') || 0);",
+          "const currentToken = pm.environment.get('access_token');",
+          "const skipAuth = pm.request.headers.get('X-Lunixi-Skip-Auto-Auth') === 'true';",
+          "if (!skipAuth && (!currentToken || Date.now() >= expiresAt)) {",
+          "  pm.sendRequest({",
+          "    url: pm.environment.get('signer_url') + '/token',",
+          "    method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' },",
+          "    body: {",
+          "      mode: 'raw',",
+          "      raw: JSON.stringify({",
+          "        baseUrl: pm.environment.get('base_url'),",
+          "        authTokenPath: pm.environment.get('auth_token_path') || '/api/v1/auth/token',",
+          "        keyId: pm.environment.get('key_id')",
+          "      })",
+          "    }",
+          "  }, function (err, res) {",
+          "    if (err) { throw new Error('Token signer unavailable: ' + err.message); }",
+          "    const json = res.json();",
+          "    if (!res.code || res.code >= 400 || !json.accessToken) {",
+          "      throw new Error('Token mint failed: ' + JSON.stringify(json));",
+          "    }",
+          "    pm.environment.set('access_token', json.accessToken);",
+          "    pm.environment.set('access_token_expires_at', String(json.expiresAt));",
+          "  });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('response is not an unhandled server error', function () {",
+          "  pm.expect(pm.response.code).to.be.below(500);",
+          "});",
+          "let body = {};",
+          "try { body = pm.response.json(); } catch (e) { body = {}; }",
+          "const data = body && typeof body.data === 'object' ? body.data : body;",
+          "if (data.paymentId || data.id) pm.environment.set('payment_id', data.paymentId || data.id);",
+          "if (data.token) pm.environment.set('checkout_token', data.token);",
+          "if (data.storedCardToken || data.cardToken) pm.environment.set('stored_card_token', data.storedCardToken || data.cardToken);"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signer Health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "X-Lunixi-Skip-Auto-Auth", "value": "true" }
+            ],
+            "url": "{{signer_url}}/health"
+          }
+        },
+        {
+          "name": "Mint Merchant Token Via Signer",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "X-Lunixi-Skip-Auto-Auth", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"baseUrl\": \"{{base_url}}\",\n  \"authTokenPath\": \"{{auth_token_path}}\",\n  \"keyId\": \"{{key_id}}\"\n}"
+            },
+            "url": "{{signer_url}}/token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('token minted', function () { pm.expect(json.accessToken).to.be.a('string').and.not.empty; });",
+                  "pm.environment.set('access_token', json.accessToken);",
+                  "pm.environment.set('access_token_expires_at', String(json.expiresAt));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments / Checkout",
+      "item": [
+        {
+          "name": "Create Checkout Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "checkout:{{order_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout smoke test\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-001\",\n      \"price\": {{amount_minor}},\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/payments/intents"
+          }
+        },
+        {
+          "name": "Get Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/{{payment_id}}"
+          }
+        },
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments?limit=10&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments"],
+              "query": [
+                { "key": "limit", "value": "10" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments / Direct",
+      "item": [
+        {
+          "name": "Direct 2D Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "direct-2d:{{order_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paidPrice\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"direct-2d-{{order_id}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": {{amount_minor}}, \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/payments/direct/2d"
+          }
+        },
+        {
+          "name": "Direct 3D Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "direct-3d:{{order_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paidPrice\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"direct-3d-{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": {{amount_minor}}, \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/payments/direct/3d"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments / Actions",
+      "item": [
+        {
+          "name": "Capture Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "capture:{{payment_id}}:{{idempotency_key}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\"\n}" },
+            "url": "{{base_url}}/api/v1/payments/{{payment_id}}/capture"
+          }
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "refund:{{payment_id}}:{{idempotency_key}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\",\n  \"amount\": {{amount_minor}},\n  \"reason\": \"postman-test\"\n}" },
+            "url": "{{base_url}}/api/v1/payments/{{payment_id}}/refund"
+          }
+        },
+        {
+          "name": "Void Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Idempotency-Key", "value": "void:{{payment_id}}:{{idempotency_key}}" }
+            ],
+            "url": "{{base_url}}/api/v1/payments/{{payment_id}}/void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "BIN / Installments",
+      "item": [
+        {
+          "name": "BIN Info",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"binOrPan\": \"540000\"\n}" },
+            "url": "{{base_url}}/api/v1/bin/info"
+          }
+        },
+        {
+          "name": "Installment Options",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"binOrPan\": \"540000\"\n}" },
+            "url": "{{base_url}}/api/v1/bin/installments"
+          }
+        },
+        {
+          "name": "Card Taxonomy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/bin/card-taxonomy"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stored Cards",
+      "item": [
+        {
+          "name": "Store Card With 3DS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "store-card:{{card_user_key}}:{{idempotency_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cardUserKey\": \"{{card_user_key}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"currency\": \"{{currency}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  }\n}"
+            },
+            "url": "{{base_url}}/api/v1/payments/cards"
+          }
+        },
+        {
+          "name": "List Stored Cards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/payments/cards?cardUserKey={{card_user_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "payments", "cards"],
+              "query": [
+                { "key": "cardUserKey", "value": "{{card_user_key}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Stored Card",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/cards/{{stored_card_token}}"
+          }
+        },
+        {
+          "name": "Deactivate Stored Card",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Idempotency-Key", "value": "deactivate-card:{{stored_card_token}}:{{idempotency_key}}" }
+            ],
+            "url": "{{base_url}}/api/v1/payments/cards/{{stored_card_token}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Failover Recovery Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/analytics/failover-recovery"
+          }
+        },
+        {
+          "name": "Provider Credential Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/analytics/provider-credentials/{{provider_credential_id}}"
+          }
+        }
+      ]
+    }
+  ]
+}
