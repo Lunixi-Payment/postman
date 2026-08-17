@@ -25,7 +25,7 @@ How it works:
 Start the signer:
 
 ```bash
-cd /Users/selimdestanci/Desktop/Fintech/entegrasyon/postman
+cd /postman
 node tools/signer-server.js
 ```
 
