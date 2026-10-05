@@ -1,0 +1,769 @@
+{
+  "info": {
+    "name": "Lunixi Fraud - Local Signer",
+    "version": "1.0.0",
+    "description": "Fraud decision, event ingest and decision logs.\n\nOnly the customer fraud surface is here. Panel routes (/fraud/admin/*, /fraud/flows/*) are not part of the customer API and are deliberately absent.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const expiresAt = Number(pm.environment.get('access_token_expires_at') || 0);",
+          "const currentToken = pm.environment.get('access_token');",
+          "const skipAuth = pm.request.headers.get('X-Lunixi-Skip-Auto-Auth') === 'true';",
+          "if (!skipAuth && (!currentToken || Date.now() >= expiresAt)) {",
+          "  pm.sendRequest({",
+          "    url: pm.environment.get('signer_url') + '/token',",
+          "    method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' },",
+          "    body: {",
+          "      mode: 'raw',",
+          "      raw: JSON.stringify({",
+          "        baseUrl: pm.environment.get('base_url'),",
+          "        authTokenPath: pm.environment.get('auth_token_path') || '/api/v1/auth/token',",
+          "        keyId: pm.environment.get('key_id')",
+          "      })",
+          "    }",
+          "  }, function (err, res) {",
+          "    if (err) { throw new Error('Token signer unavailable: ' + err.message); }",
+          "    const json = res.json();",
+          "    if (!res.code || res.code >= 400 || !json.accessToken) {",
+          "      throw new Error('Token mint failed: ' + JSON.stringify(json));",
+          "    }",
+          "    pm.environment.set('access_token', json.accessToken);",
+          "    pm.environment.set('access_token_expires_at', String(json.expiresAt));",
+          "  });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('response is not an unhandled server error', function () {",
+          "  pm.expect(pm.response.code).to.be.below(500);",
+          "});",
+          "// `data` is a PREDEFINED object in the Postman sandbox — declaring `const data`",
+          "// here is a SyntaxError and silently kills the whole script.",
+          "let envelope = {};",
+          "try { envelope = pm.response.json(); } catch (e) { envelope = {}; }",
+          "const payload = envelope && typeof envelope.data === 'object' && envelope.data !== null",
+          "  ? envelope.data",
+          "  : envelope;",
+          "if (payload && payload.traceId) pm.environment.set('fraud_trace_id', payload.traceId);",
+          "if (envelope && envelope.pageInfo && envelope.pageInfo.nextCursor) {",
+          "  pm.environment.set('decision_cursor', envelope.pageInfo.nextCursor);",
+          "}",
+          "if (pm.response.code === 429 || pm.response.code === 503) {",
+          "  const retryAfter = pm.response.headers.get('Retry-After');",
+          "  if (retryAfter) console.log('Retry-After: ' + retryAfter + 's');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signer Health",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              }
+            ],
+            "url": "{{signer_url}}/health"
+          }
+        },
+        {
+          "name": "Mint Merchant Token Via Signer",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"baseUrl\": \"{{base_url}}\",\n  \"authTokenPath\": \"{{auth_token_path}}\",\n  \"keyId\": \"{{key_id}}\"\n}"
+            },
+            "url": "{{signer_url}}/token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.test('token minted', function () { pm.expect(json.accessToken).to.be.a('string').and.not.empty; });",
+                  "  pm.environment.set('access_token', json.accessToken);",
+                  "  pm.environment.set('access_token_expires_at', String(json.expiresAt));",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Decision",
+      "item": [
+        {
+          "name": "Standalone Decision",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/fraud/decisions/evaluate",
+            "description": "Server-to-server decision. `channel: standalone_api` is the external lane.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"standalone_api\",\n  \"surface\": \"transaction\",\n  \"stage\": \"pre_authorization\",\n  \"operationKind\": \"card_sale\",\n  \"authModeRequested\": \"2d\",\n  \"productContext\": \"direct_api\",\n  \"integrationMode\": \"standalone\",\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"subjectType\": \"card_payment\",\n  \"subjectId\": \"{{transaction_ref}}\",\n  \"payment\": {\n    \"amount\": 25000,\n    \"currency\": \"TRY\",\n    \"is3D\": false\n  },\n  \"customer\": {\n    \"email\": \"ada@example.com\",\n    \"isNew\": true\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "  const body = pm.response.json();",
+                  "  const data = body && typeof body.data === 'object' ? body.data : body;",
+                  "  pm.test('decision is one of the four outcomes', function () {",
+                  "    pm.expect(['allow', 'review', 'block', 'force_3d']).to.include(data.decision);",
+                  "  });",
+                  "  if (data.traceId) pm.environment.set('fraud_trace_id', data.traceId);",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Merchant Form Decision",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/fraud/decisions/evaluate",
+            "description": "Your own payment form with the Lunixi browser SDK. `subjectId` must equal the SDK session's subjectId, otherwise the decision records `assertion_subject_mismatch`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"merchant_form\",\n  \"surface\": \"form_gate\",\n  \"stage\": \"pre_authorization\",\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"subjectId\": \"{{subject_id}}\",\n  \"identityAssertion\": \"{{identity_assertion}}\",\n  \"payment\": {\n    \"amount\": 25000,\n    \"currency\": \"TRY\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "  const body = pm.response.json();",
+                  "  const data = body && typeof body.data === 'object' ? body.data : body;",
+                  "  pm.test('decision is one of the four outcomes', function () {",
+                  "    pm.expect(['allow', 'review', 'block', 'force_3d']).to.include(data.decision);",
+                  "  });",
+                  "  if (data.traceId) pm.environment.set('fraud_trace_id', data.traceId);",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Event Ingest",
+      "item": [
+        {
+          "name": "Prepare Signed Event",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{fraud_signer_payload}}"
+            },
+            "url": "{{signer_url}}/sign",
+            "description": "Builds the event body and asks the local signer for the headers over it. Run before 'Record Transaction Event'."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Build the event body ONCE and sign THAT exact string. A body still containing",
+                  "// {{$guid}} / {{$isoTimestamp}} would re-resolve at send time and stop matching",
+                  "// the Digest, so the gateway would reject the signature.",
+                  "const isBatch = pm.info.requestName.indexOf('Batch') !== -1;",
+                  "function event(amountMinor) {",
+                  "  return {",
+                  "    eventId: require('uuid').v4(),",
+                  "    subjectType: 'bank_transfer',",
+                  "    eventType: 'transfer_completed',",
+                  "    occurredAt: new Date().toISOString(),",
+                  "    currency: 'TRY',",
+                  "    customerId: 'cus_1',",
+                  "    amountMinor: amountMinor",
+                  "  };",
+                  "}",
+                  "const bodyObject = isBatch ? [event(1500000), event(2200000)] : event(1500000);",
+                  "// Compact: the gateway computes Digest over JSON.stringify(req.body), without whitespace.",
+                  "const rawBody = JSON.stringify(bodyObject);",
+                  "pm.environment.set('fraud_event_body', rawBody);",
+                  "pm.environment.set('fraud_event_path', isBatch",
+                  "  ? '/api/v1/fraud/events/transactions/batch'",
+                  "  : '/api/v1/fraud/events/transactions');",
+                  "pm.environment.set('fraud_signer_payload', JSON.stringify({",
+                  "  method: 'POST',",
+                  "  path: pm.environment.get('fraud_event_path'),",
+                  "  keyId: pm.environment.get('key_id'),",
+                  "  body: rawBody",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('signer returned a signature', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    const h = body && body.headers ? body.headers : body;",
+                  "    pm.expect(h['X-Signature']).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "  const body = pm.response.json();",
+                  "  const h = body && body.headers ? body.headers : body;",
+                  "  pm.environment.set('sig_key_id', h['X-Key-Id']);",
+                  "  pm.environment.set('sig_date', h['X-Date']);",
+                  "  pm.environment.set('sig_nonce', h['X-Nonce']);",
+                  "  pm.environment.set('sig_signature', h['X-Signature']);",
+                  "  pm.environment.set('sig_digest', h['Digest'] || '');",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Record Transaction Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Key-Id",
+                "value": "{{sig_key_id}}"
+              },
+              {
+                "key": "X-Date",
+                "value": "{{sig_date}}"
+              },
+              {
+                "key": "X-Nonce",
+                "value": "{{sig_nonce}}"
+              },
+              {
+                "key": "X-Signature",
+                "value": "{{sig_signature}}"
+              },
+              {
+                "key": "Digest",
+                "value": "{{sig_digest}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{fraud_event_body}}"
+            },
+            "url": "{{base_url}}/api/v1/fraud/events/transactions",
+            "description": "Sends the body prepared by the previous request. merchantId is stamped from the authenticated key and is never read from the body."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('event accepted', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
+                  "  });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prepare Signed Event Batch",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{fraud_signer_payload}}"
+            },
+            "url": "{{signer_url}}/sign",
+            "description": "Builds the batch body and asks the local signer for the headers over it. Run before 'Record Transaction Events (Batch)'."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Build the event body ONCE and sign THAT exact string. A body still containing",
+                  "// {{$guid}} / {{$isoTimestamp}} would re-resolve at send time and stop matching",
+                  "// the Digest, so the gateway would reject the signature.",
+                  "const isBatch = pm.info.requestName.indexOf('Batch') !== -1;",
+                  "function event(amountMinor) {",
+                  "  return {",
+                  "    eventId: require('uuid').v4(),",
+                  "    subjectType: 'bank_transfer',",
+                  "    eventType: 'transfer_completed',",
+                  "    occurredAt: new Date().toISOString(),",
+                  "    currency: 'TRY',",
+                  "    customerId: 'cus_1',",
+                  "    amountMinor: amountMinor",
+                  "  };",
+                  "}",
+                  "const bodyObject = isBatch ? [event(1500000), event(2200000)] : event(1500000);",
+                  "// Compact: the gateway computes Digest over JSON.stringify(req.body), without whitespace.",
+                  "const rawBody = JSON.stringify(bodyObject);",
+                  "pm.environment.set('fraud_event_body', rawBody);",
+                  "pm.environment.set('fraud_event_path', isBatch",
+                  "  ? '/api/v1/fraud/events/transactions/batch'",
+                  "  : '/api/v1/fraud/events/transactions');",
+                  "pm.environment.set('fraud_signer_payload', JSON.stringify({",
+                  "  method: 'POST',",
+                  "  path: pm.environment.get('fraud_event_path'),",
+                  "  keyId: pm.environment.get('key_id'),",
+                  "  body: rawBody",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('signer returned a signature', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    const h = body && body.headers ? body.headers : body;",
+                  "    pm.expect(h['X-Signature']).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "  const body = pm.response.json();",
+                  "  const h = body && body.headers ? body.headers : body;",
+                  "  pm.environment.set('sig_key_id', h['X-Key-Id']);",
+                  "  pm.environment.set('sig_date', h['X-Date']);",
+                  "  pm.environment.set('sig_nonce', h['X-Nonce']);",
+                  "  pm.environment.set('sig_signature', h['X-Signature']);",
+                  "  pm.environment.set('sig_digest', h['Digest'] || '');",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Record Transaction Events (Batch)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Key-Id",
+                "value": "{{sig_key_id}}"
+              },
+              {
+                "key": "X-Date",
+                "value": "{{sig_date}}"
+              },
+              {
+                "key": "X-Nonce",
+                "value": "{{sig_nonce}}"
+              },
+              {
+                "key": "X-Signature",
+                "value": "{{sig_signature}}"
+              },
+              {
+                "key": "Digest",
+                "value": "{{sig_digest}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{fraud_event_body}}"
+            },
+            "url": "{{base_url}}/api/v1/fraud/events/transactions/batch",
+            "description": "A JSON array, or { events: [...] }."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('event accepted', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
+                  "  });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Event ingest is authenticated by the per-request Ed25519 signature. In this profile the key never enters Postman, so signing is a two-step pair: the Prepare request asks the local signer for the headers over the exact body, then the Record request sends that body with them. Run the pair in order — a signature obtained inside an async callback is not available to the same request, only to the next one."
+    },
+    {
+      "name": "Decision Logs",
+      "item": [
+        {
+          "name": "List Decision Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/fraud/decision-logs?limit=20",
+            "description": "Cursor paginated. pageInfo is a sibling of data."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('data is an array', function () { pm.expect(body.data).to.be.an('array'); });",
+                  "  // pageInfo is a SIBLING of data in the envelope, not nested inside it.",
+                  "  if (body.pageInfo && body.pageInfo.nextCursor) {",
+                  "    pm.environment.set('decision_cursor', body.pageInfo.nextCursor);",
+                  "  }",
+                  "  if (Array.isArray(body.data) && body.data.length && body.data[0].traceId) {",
+                  "    pm.environment.set('fraud_trace_id', body.data[0].traceId);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Decision Logs (Next Page)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/fraud/decision-logs?limit=20&cursor={{decision_cursor}}",
+            "description": "Pass the previous response's pageInfo.nextCursor verbatim."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('data is an array', function () { pm.expect(body.data).to.be.an('array'); });",
+                  "  // pageInfo is a SIBLING of data in the envelope, not nested inside it.",
+                  "  if (body.pageInfo && body.pageInfo.nextCursor) {",
+                  "    pm.environment.set('decision_cursor', body.pageInfo.nextCursor);",
+                  "  }",
+                  "  if (Array.isArray(body.data) && body.data.length && body.data[0].traceId) {",
+                  "    pm.environment.set('fraud_trace_id', body.data[0].traceId);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Decision Log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/fraud/decision-logs/{{fraud_trace_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Latest Decision For Payment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/fraud/decision-logs?paymentId={{payment_id}}&limit=1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('data is an array', function () { pm.expect(body.data).to.be.an('array'); });",
+                  "  // pageInfo is a SIBLING of data in the envelope, not nested inside it.",
+                  "  if (body.pageInfo && body.pageInfo.nextCursor) {",
+                  "    pm.environment.set('decision_cursor', body.pageInfo.nextCursor);",
+                  "  }",
+                  "  if (Array.isArray(body.data) && body.data.length && body.data[0].traceId) {",
+                  "    pm.environment.set('fraud_trace_id', body.data[0].traceId);",
+                  "  }",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Negative",
+      "item": [
+        {
+          "name": "Channel Spoof Is Rejected (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/fraud/decisions/evaluate",
+            "description": "lunixi_checkout and wallet come only from Lunixi's own services; declaring one from outside is a 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"lunixi_checkout\",\n  \"transactionRef\": \"{{transaction_ref}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('rejected with 400', function () { pm.response.to.have.status(400); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('carries a machine-readable code', function () {",
+                  "    pm.expect(body.code || (body.error && body.error.code)).to.be.a('string');",
+                  "  });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserved Product Context Is Rejected (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/fraud/decisions/evaluate",
+            "description": "simulation / post_hoc_backfill / manual_review belong to platform senders (the unbilled lane).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productContext\": \"simulation\",\n  \"transactionRef\": \"{{transaction_ref}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('rejected with 400', function () { pm.response.to.have.status(400); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('carries a machine-readable code', function () {",
+                  "    pm.expect(body.code || (body.error && body.error.code)).to.be.a('string');",
+                  "  });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Non-Standalone Integration Mode Is Rejected (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/fraud/decisions/evaluate",
+            "description": "standalone is the only declarable integration mode.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"integrationMode\": \"gateway_integrated\",\n  \"transactionRef\": \"{{transaction_ref}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('rejected with 400', function () { pm.response.to.have.status(400); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('carries a machine-readable code', function () {",
+                  "    pm.expect(body.code || (body.error && body.error.code)).to.be.a('string');",
+                  "  });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown Field Is Rejected (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/fraud/decisions/evaluate",
+            "description": "The gateway runs forbidNonWhitelisted.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"notAField\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  pm.test('rejected with 400', function () { pm.response.to.have.status(400); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('carries a machine-readable code', function () {",
+                  "    pm.expect(body.code || (body.error && body.error.code)).to.be.a('string');",
+                  "  });",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

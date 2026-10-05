@@ -2,13 +2,17 @@
   "info": {
     "_postman_id": "84c0f732-715c-4ed4-9b3b-dbd96a4dbe38",
     "name": "Lunixi Payment Gateway",
-    "description": "Professional Postman collection for Lunixi payment integrations. Tokens are minted automatically through the local signer helper.",
+    "description": "Professional Postman collection for Lunixi payment integrations. Tokens are minted and every request is signed automatically through the local signer helper.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
     "type": "bearer",
     "bearer": [
-      { "key": "token", "value": "{{access_token}}", "type": "string" }
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
     ]
   },
   "event": [
@@ -17,30 +21,95 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "const expiresAt = Number(pm.environment.get('access_token_expires_at') || 0);",
-          "const currentToken = pm.environment.get('access_token');",
+          "// Runs before EVERY request in this collection:",
+          "//   1. keeps a merchant access token fresh, minted by the local signer",
+          "//      (tools/signer-server.js);",
+          "//   2. has the local signer sign THIS request: X-Key-Id, X-Date, X-Nonce, X-Signature",
+          "//      and, when the request has a body, Digest. Step-up endpoints (create intent,",
+          "//      direct 2D/3D, capture) reject an unsigned request with 401.",
+          "// The private key never enters Postman. A request with the header",
+          "// `X-Lunixi-Skip-Auto-Auth: true` (the signer's own endpoints) is left untouched.",
           "const skipAuth = pm.request.headers.get('X-Lunixi-Skip-Auto-Auth') === 'true';",
-          "if (!skipAuth && (!currentToken || Date.now() >= expiresAt)) {",
+          "const signerUrl = String(pm.environment.get('signer_url') || '').replace(/\\/$/, '');",
+          "// The gateway checks the signature against the request target it receives (path +",
+          "// query, percent-encoded). Resolve {{variables}} here, encode once, and send exactly",
+          "// that string, so the signed target and the received target are the same.",
+          "function encodeRequestTarget(target) {",
+          "  return target.replace(/%(?![0-9A-Fa-f]{2})|[^A-Za-z0-9._~!$&()*+,;=:@\\/?%-]/gu, function (ch) {",
+          "    return ch === \"'\" ? '%27' : encodeURIComponent(ch);",
+          "  });",
+          "}",
+          "function prepareRequestTarget() {",
+          "  const resolvedUrl = pm.variables.replaceIn(pm.request.url.toString());",
+          "  const urlParts = /^((?:[a-z][a-z0-9+.-]*:\\/\\/)?[^\\/?#]*)([^#]*)/i.exec(resolvedUrl);",
+          "  const target = encodeRequestTarget(urlParts[2] || '/');",
+          "  pm.request.url.update(urlParts[1] + target);",
+          "  return target;",
+          "}",
+          "// The gateway hashes the JSON it parsed, re-serialised without whitespace. Send the",
+          "// body in exactly that form with every {{variable}} already resolved: a body that is",
+          "// resolved again at send time ({{$guid}}, {{$timestamp}}) would no longer match Digest.",
+          "function prepareRequestBody() {",
+          "  const requestBody = pm.request.body;",
+          "  if (!requestBody || requestBody.mode !== 'raw' || !String(requestBody.raw || '').trim()) return null;",
+          "  let compactBody;",
+          "  try {",
+          "    compactBody = JSON.stringify(JSON.parse(pm.variables.replaceIn(requestBody.raw)));",
+          "  } catch (error) {",
+          "    throw new Error('Request body is not valid JSON after variable resolution: ' + error.message);",
+          "  }",
+          "  pm.request.body.update({ mode: 'raw', raw: compactBody, options: requestBody.options });",
+          "  return compactBody;",
+          "}",
+          "if (!skipAuth) {",
+          "  if (!signerUrl) throw new Error('Missing environment variable: signer_url');",
+          "  const expiresAt = Number(pm.environment.get('access_token_expires_at') || 0);",
+          "  const currentToken = pm.environment.get('access_token');",
+          "  if (!currentToken || Date.now() >= expiresAt) {",
+          "    pm.sendRequest({",
+          "      url: signerUrl + '/token',",
+          "      method: 'POST',",
+          "      header: { 'Content-Type': 'application/json' },",
+          "      body: {",
+          "        mode: 'raw',",
+          "        raw: JSON.stringify({",
+          "          baseUrl: pm.environment.get('base_url'),",
+          "          authTokenPath: pm.environment.get('auth_token_path') || '/api/v1/auth/token',",
+          "          keyId: pm.environment.get('key_id')",
+          "        })",
+          "      }",
+          "    }, function (err, res) {",
+          "      if (err) { throw new Error('Token signer unavailable: ' + err.message); }",
+          "      const json = res.json();",
+          "      if (!res.code || res.code >= 400 || !json.accessToken) {",
+          "        throw new Error('Token mint failed: ' + JSON.stringify(json));",
+          "      }",
+          "      pm.environment.set('access_token', json.accessToken);",
+          "      pm.environment.set('access_token_expires_at', String(json.expiresAt));",
+          "    });",
+          "  }",
+          "",
+          "  const method = pm.request.method.toUpperCase();",
+          "  const target = prepareRequestTarget();",
+          "  const signedBody = prepareRequestBody();",
           "  pm.sendRequest({",
-          "    url: pm.environment.get('signer_url') + '/token',",
+          "    url: signerUrl + '/sign',",
           "    method: 'POST',",
           "    header: { 'Content-Type': 'application/json' },",
           "    body: {",
           "      mode: 'raw',",
-          "      raw: JSON.stringify({",
-          "        baseUrl: pm.environment.get('base_url'),",
-          "        authTokenPath: pm.environment.get('auth_token_path') || '/api/v1/auth/token',",
-          "        keyId: pm.environment.get('key_id')",
-          "      })",
+          "      raw: JSON.stringify({ method: method, path: target, keyId: pm.environment.get('key_id'), body: signedBody })",
           "    }",
           "  }, function (err, res) {",
-          "    if (err) { throw new Error('Token signer unavailable: ' + err.message); }",
-          "    const json = res.json();",
-          "    if (!res.code || res.code >= 400 || !json.accessToken) {",
-          "      throw new Error('Token mint failed: ' + JSON.stringify(json));",
+          "    if (err) { throw new Error('Request signer unavailable: ' + err.message); }",
+          "    const signed = res.json();",
+          "    const signedHeaders = signed && signed.headers;",
+          "    if (!res.code || res.code >= 400 || !signedHeaders || !signedHeaders['X-Signature']) {",
+          "      throw new Error('Request signing failed: ' + JSON.stringify(signed));",
           "    }",
-          "    pm.environment.set('access_token', json.accessToken);",
-          "    pm.environment.set('access_token_expires_at', String(json.expiresAt));",
+          "    Object.keys(signedHeaders).forEach(function (name) {",
+          "      pm.request.headers.upsert({ key: name, value: signedHeaders[name] });",
+          "    });",
           "  });",
           "}"
         ]
@@ -54,12 +123,26 @@
           "pm.test('response is not an unhandled server error', function () {",
           "  pm.expect(pm.response.code).to.be.below(500);",
           "});",
-          "let body = {};",
-          "try { body = pm.response.json(); } catch (e) { body = {}; }",
-          "const data = body && typeof body.data === 'object' ? body.data : body;",
-          "if (data.paymentId || data.id) pm.environment.set('payment_id', data.paymentId || data.id);",
-          "if (data.token) pm.environment.set('checkout_token', data.token);",
-          "if (data.storedCardToken || data.cardToken) pm.environment.set('stored_card_token', data.storedCardToken || data.cardToken);"
+          "pm.test('request is authenticated', function () {",
+          "  pm.expect(pm.response.code, 'HTTP 401: the access token or the request signature was rejected').to.not.equal(401);",
+          "});",
+          "// `data` is a PREDEFINED object in the Postman/newman sandbox. Declaring",
+          "// `const data` here is a SyntaxError that kills this whole script silently —",
+          "// which is why none of these variables were being chained.",
+          "let envelope = {};",
+          "try { envelope = pm.response.json(); } catch (e) { envelope = {}; }",
+          "const payload = envelope && typeof envelope.data === 'object' && envelope.data !== null",
+          "  ? envelope.data",
+          "  : envelope;",
+          "// A payment-link response carries the LINK id in `id`; the Payment Links folder",
+          "// chains it into `payment_link_id`. Taking it here would overwrite `payment_id`.",
+          "const isPaymentLinkRoute = /\\/api\\/v1\\/payments\\/links(?:[\\/?#]|$)/.test(pm.request.url.toString());",
+          "// A wallet response carries wallet ids (end user, wallet, operation) in `id`, the",
+          "// card payment of a top-up in `paymentId`; the Wallet folder chains them into wallet_*.",
+          "const isWalletRoute = /\\/api\\/v1\\/wallet(?:[\\/?#]|$)/.test(pm.request.url.toString());",
+          "if (!isPaymentLinkRoute && !isWalletRoute && (payload.paymentId || payload.id)) pm.environment.set('payment_id', payload.paymentId || payload.id);",
+          "if (!isWalletRoute && payload.token) pm.environment.set('checkout_token', payload.token);",
+          "if (!isWalletRoute && (payload.storedCardToken || payload.cardToken)) pm.environment.set('stored_card_token', payload.storedCardToken || payload.cardToken);"
         ]
       }
     }
@@ -71,10 +154,15 @@
         {
           "name": "Signer Health",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
-              { "key": "X-Lunixi-Skip-Auto-Auth", "value": "true" }
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              }
             ],
             "url": "{{signer_url}}/health"
           }
@@ -82,11 +170,19 @@
         {
           "name": "Mint Merchant Token Via Signer",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "X-Lunixi-Skip-Auto-Auth", "value": "true" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -119,8 +215,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "checkout:{{order_id}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "checkout:{{order_id}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -144,11 +246,23 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/payments?limit=10&page=1",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "payments"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments"
+              ],
               "query": [
-                { "key": "limit", "value": "10" },
-                { "key": "page", "value": "1" }
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
               ]
             }
           }
@@ -163,8 +277,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "direct-2d:{{order_id}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "direct-2d:{{order_id}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -178,8 +298,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "direct-3d:{{order_id}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "direct-3d:{{order_id}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -198,10 +324,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "capture:{{payment_id}}:{{idempotency_key}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "capture:{{payment_id}}:{{idempotency_key}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\"\n}"
+            },
             "url": "{{base_url}}/api/v1/payments/{{payment_id}}/capture"
           }
         },
@@ -210,10 +345,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "refund:{{payment_id}}:{{idempotency_key}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "refund:{{payment_id}}:{{idempotency_key}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\",\n  \"amount\": {{amount_minor}},\n  \"reason\": \"postman-test\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\",\n  \"amount\": {{amount_minor}},\n  \"reason\": \"postman-test\"\n}"
+            },
             "url": "{{base_url}}/api/v1/payments/{{payment_id}}/refund"
           }
         },
@@ -222,9 +366,442 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Idempotency-Key", "value": "void:{{payment_id}}:{{idempotency_key}}" }
+              {
+                "key": "Idempotency-Key",
+                "value": "void:{{payment_id}}:{{idempotency_key}}"
+              }
             ],
             "url": "{{base_url}}/api/v1/payments/{{payment_id}}/void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment Links",
+      "description": "Payment links (`/api/v1/payments/links`): a shareable payment page at `https://pay.lunixi.com/<code>`.\n\n- **API key only.** These routes accept the per-request Ed25519 signature only; the collection signs every gateway request. The key needs the `payment-link:create`, `payment-link:view`, `payment-link:manage` and `payment-link:send` scopes (403 `API_INSUFFICIENT_SCOPE` otherwise). Keys created before payment links do not have them.\n- **The key decides the environment.** A TEST key (`mk_test_…`) creates and sees only TEST links; no money is taken on them.\n- **Money is in minor units:** `150000` is 1,500.00 TRY.\n- **Idempotency-Key** (8–200 printable ASCII characters) is required on create and send. The same key with the same body returns the stored result.\n- **Link images** take three requests: declare the file (`/images`), PUT it to the returned storage URL, confirm it. The PUT goes to the storage host, not the gateway: it is `No Auth` and marked `X-Lunixi-Skip-Auto-Auth`, so neither the access token nor the signature reaches storage. `Set Payment Link Image` then shows the image on the link.\n- Create, get, update and the actions store the link in `payment_link_id` and its `rowVersion` in `payment_link_row_version`; update and the actions send that `rowVersion` back as `expectedRowVersion`.\n\nFulfil orders from the `payment.captured` webhook (its payload carries `paymentLinkId` and `paymentLinkCode`), not from these reads.",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Chains the link returned by create / get / update / pause / resume / deactivate,",
+              "// so the next request in this folder targets it with its CURRENT rowVersion",
+              "// (a stale one is 409 payment_link.link.version_conflict).",
+              "let linkEnvelope = {};",
+              "try { linkEnvelope = pm.response.json(); } catch (e) { linkEnvelope = {}; }",
+              "const link = linkEnvelope && typeof linkEnvelope.data === 'object' && linkEnvelope.data !== null",
+              "  ? linkEnvelope.data",
+              "  : {};",
+              "if (typeof link.id === 'string' && typeof link.shortCode === 'string') {",
+              "  pm.environment.set('payment_link_id', link.id);",
+              "  pm.environment.set('payment_link_row_version', String(link.rowVersion));",
+              "  pm.environment.set('payment_link_url', link.url);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Create Payment Link (Fixed, Single Use)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('payment link created (201) or replayed (200)', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "plink-create-{{$guid}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links",
+            "description": "A single-use link for a set amount (an invoice or a payment request). `environment` is optional and, when sent, must equal the key's environment. `expiresAt` (ISO-8601, in the future) is optional; without it the link does not expire.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usage\": \"SINGLE_USE\",\n  \"amountMode\": \"FIXED\",\n  \"currency\": \"{{currency}}\",\n  \"amountMinor\": {{amount_minor}},\n  \"title\": \"Consulting fee\",\n  \"description\": \"Postman test link\",\n  \"taxNote\": \"VAT included\",\n  \"reference\": \"pm-{{$timestamp}}\",\n  \"buyerFields\": {\n    \"name\": \"REQUIRED\",\n    \"email\": \"REQUIRED\",\n    \"phone\": \"OPTIONAL\",\n    \"address\": \"HIDDEN\",\n    \"identityNumber\": \"HIDDEN\"\n  },\n  \"metadata\": {\n    \"source\": \"postman\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create Payment Link (Itemized, Multi Use)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('payment link created (201) or replayed (200)', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "plink-create-{{$guid}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links",
+            "description": "A multi-use link where the buyer picks quantities. `itemKey` is the line's permanent identity (stock is counted on it) and cannot change later. `capacity` caps the units sold across all payments.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usage\": \"MULTI_USE\",\n  \"amountMode\": \"ITEMIZED\",\n  \"currency\": \"{{currency}}\",\n  \"title\": \"Year-end concert\",\n  \"items\": [\n    { \"itemKey\": \"standard\", \"name\": \"Standard ticket\", \"unitPriceMinor\": 45000, \"minQuantity\": 0, \"maxQuantity\": 6, \"capacity\": 400 },\n    { \"itemKey\": \"balcony\", \"name\": \"Balcony ticket\", \"unitPriceMinor\": 30000, \"minQuantity\": 0, \"maxQuantity\": 6, \"capacity\": 150 }\n  ],\n  \"buttonLabelKey\": \"BUY\",\n  \"requireTermsAcceptance\": false,\n  \"customFields\": [\n    { \"key\": \"seat_note\", \"label\": \"Seat preference\", \"fieldType\": \"TEXT\", \"required\": false, \"maxLength\": 60 }\n  ],\n  \"tags\": [\"postman\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Payment Links",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/links?limit=20&state=ACTIVE,PAUSED&includeTotal=true",
+            "description": "Newest first. `state`, `usage` and `amountMode` take comma lists; `query` matches a short code exactly or a title/reference prefix; `createdFrom`/`createdTo` bound `[from, to)`. Rows are `data.items`; paging is the top-level `pageInfo` — pass `pageInfo.nextCursor` back as `cursor`."
+          }
+        },
+        {
+          "name": "Get Payment Link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}",
+            "description": "The full link: definition fields at the top level, `state`, `rowVersion`, `counters` and `availability`. Another organisation's link, or a link of the other environment, is 404 `payment_link.link.not_found`."
+          }
+        },
+        {
+          "name": "Update Payment Link",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}",
+            "description": "Only the keys in the body change (plus `expectedRowVersion`); `null` clears a field and a nested object is replaced as a whole. Every update creates a new version. `usage`, `amountMode` and `currency` are fixed (422 `payment_link.link.immutable_field`); amount fields are locked while a payment is in progress or once the link has been paid (409 `payment_link.link.amount_locked`).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedRowVersion\": {{payment_link_row_version}},\n  \"title\": \"Consulting fee (updated)\",\n  \"description\": \"Changed from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pause Payment Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/pause",
+            "description": "Stops accepting payments until resumed. `expectedRowVersion` is optional on the API (omitted = no version check).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedRowVersion\": {{payment_link_row_version}},\n  \"reason\": \"Paused from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Resume Payment Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/resume",
+            "description": "Reopens a paused link (only while `expiresAt` is in the future).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedRowVersion\": {{payment_link_row_version}},\n  \"reason\": \"Resumed from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send Payment Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "plink-send-{{$guid}}"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/send",
+            "description": "Sends the link by e-mail or SMS. An empty `recipientEmail` uses the link's `recipient`; the links this folder creates have none, so set `payment_link_recipient_email` first. A send can be accepted and still fail: check `delivery.state` and `delivery.failureReason`. With a TEST key only your organisation's own verified member addresses receive messages (`test_mode_recipient_not_allowed` otherwise), so use your own login e-mail.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"EMAIL\",\n  \"recipientEmail\": \"{{payment_link_recipient_email}}\",\n  \"locale\": \"tr\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Payment Link QR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/qr?format=png&size=512",
+            "description": "The QR code as an image (`format` = `svg` | `png`, `size` 128–2048 px). It encodes the link URL, so a printed code keeps working as long as the link does."
+          }
+        },
+        {
+          "name": "List Payment Link Attempts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/attempts?limit=20",
+            "description": "Every buyer attempt, newest first; filter with `state` (comma list: OPEN, BOUND, SUCCEEDED, FAILED, EXPIRED, ABANDONED, NEEDS_REVIEW). `failureCode` is a canonical key, never a raw bank message."
+          }
+        },
+        {
+          "name": "List Payment Link Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/payments?limit=20",
+            "description": "Successful payments on the link with capture and refund totals and the receipt number."
+          }
+        },
+        {
+          "name": "Create Payment Link Image Upload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('upload target created (201)', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "// Chains the target into the next two requests. The PUT must carry exactly",
+                  "// uploadHeaders: the upload URL is signed over them.",
+                  "let uploadEnvelope = {};",
+                  "try { uploadEnvelope = pm.response.json(); } catch (e) { uploadEnvelope = {}; }",
+                  "const uploadTarget = uploadEnvelope && typeof uploadEnvelope.data === 'object' && uploadEnvelope.data !== null",
+                  "  ? uploadEnvelope.data",
+                  "  : {};",
+                  "const uploadHeaders = uploadTarget.uploadHeaders || {};",
+                  "pm.test('the upload is a PUT signed for Content-Type only', function () {",
+                  "  pm.expect(uploadTarget.uploadMethod).to.equal('PUT');",
+                  "  pm.expect(Object.keys(uploadHeaders).join(',')).to.equal('Content-Type');",
+                  "});",
+                  "if (typeof uploadTarget.assetId === 'string' && typeof uploadTarget.uploadUrl === 'string'",
+                  "  && typeof uploadHeaders['Content-Type'] === 'string') {",
+                  "  pm.environment.set('payment_link_image_asset_id', uploadTarget.assetId);",
+                  "  pm.environment.set('payment_link_image_upload_url', uploadTarget.uploadUrl);",
+                  "  pm.environment.set('payment_link_image_content_type', uploadHeaders['Content-Type']);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/images",
+            "description": "Link image, step 1 of 3 (scope `payment-link:create`). Declare the file you will upload: `contentType` is `image/png`, `image/jpeg` or `image/webp` (SVG is refused) and `sizeBytes` is its size in bytes (over 2 MiB is refused here, before anything is uploaded; storage measures the file again on confirmation). Answers `201` with `assetId`, a presigned `uploadUrl` on the storage host, `uploadHeaders` and `expiresAt`; the test stores them for the next two requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"cover.png\",\n  \"contentType\": \"image/png\",\n  \"sizeBytes\": 48213\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Upload Payment Link Image to Storage",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('image stored (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Lunixi-Skip-Auto-Auth",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "{{payment_link_image_content_type}}"
+              }
+            ],
+            "url": "{{payment_link_image_upload_url}}",
+            "description": "Link image, step 2 of 3. Select the image file under Body → binary and send it before the returned `expiresAt` (15 minutes by default). This request goes to the storage host behind the presigned URL, not to the gateway, so it carries no access token and no signature: it is `No Auth`, and `X-Lunixi-Skip-Auto-Auth` keeps the collection script from signing it. It sends only the `Content-Type` the URL was signed for. A `403` from storage means the URL has expired or the Content-Type differs from the declared one: start again from step 1.",
+            "body": {
+              "mode": "file",
+              "file": {}
+            }
+          }
+        },
+        {
+          "name": "Confirm Payment Link Image",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('image published (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  let imageEnvelope = {};",
+                  "  try { imageEnvelope = pm.response.json(); } catch (e) { imageEnvelope = {}; }",
+                  "  const image = imageEnvelope && typeof imageEnvelope.data === 'object' && imageEnvelope.data !== null",
+                  "    ? imageEnvelope.data",
+                  "    : {};",
+                  "  pm.expect(image.state).to.equal('PUBLISHED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/images/{{payment_link_image_asset_id}}/confirm",
+            "description": "Link image, step 3 of 3 (scope `payment-link:create`). Media checks the stored file (its bytes must be the declared type; at most 2 MiB and 4096×4096 px) and publishes it: `{assetId, url, state: 'PUBLISHED'}`. A file that fails the checks is deleted (`400`) and has to be uploaded again from step 1; confirming before the upload has landed is `400 media.confirm.object_missing` and can be retried. `url` is null while the public image host is not configured.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Set Payment Link Image",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}",
+            "description": "Shows the confirmed image on the link; like every update it creates a new version, and `null` removes the image. An item takes its own image in its `imageAssetId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedRowVersion\": {{payment_link_row_version}},\n  \"imageAssetId\": \"{{payment_link_image_asset_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Deactivate Payment Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/v1/payments/links/{{payment_link_id}}/deactivate",
+            "description": "Permanently closes the link; it cannot be reopened.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedRowVersion\": {{payment_link_row_version}},\n  \"reason\": \"Closed from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         }
       ]
@@ -236,8 +813,16 @@
           "name": "BIN Info",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"binOrPan\": \"540000\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"binOrPan\": \"540000\"\n}"
+            },
             "url": "{{base_url}}/api/v1/bin/info"
           }
         },
@@ -245,8 +830,16 @@
           "name": "Installment Options",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"binOrPan\": \"540000\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"binOrPan\": \"540000\"\n}"
+            },
             "url": "{{base_url}}/api/v1/bin/installments"
           }
         },
@@ -268,8 +861,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "store-card:{{card_user_key}}:{{idempotency_key}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "store-card:{{card_user_key}}:{{idempotency_key}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -285,10 +884,20 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/payments/cards?cardUserKey={{card_user_key}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "payments", "cards"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                "cards"
+              ],
               "query": [
-                { "key": "cardUserKey", "value": "{{card_user_key}}" }
+                {
+                  "key": "cardUserKey",
+                  "value": "{{card_user_key}}"
+                }
               ]
             }
           }
@@ -306,7 +915,10 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Idempotency-Key", "value": "deactivate-card:{{stored_card_token}}:{{idempotency_key}}" }
+              {
+                "key": "Idempotency-Key",
+                "value": "deactivate-card:{{stored_card_token}}:{{idempotency_key}}"
+              }
             ],
             "url": "{{base_url}}/api/v1/payments/cards/{{stored_card_token}}"
           }
@@ -331,6 +943,2136 @@
             "header": [],
             "url": "{{base_url}}/api/v1/payments/analytics/provider-credentials/{{provider_credential_id}}"
           }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhook endpoint yönetimi + teslimat operasyonları (DEAD_LETTER, replay).\nİmza: `x-lunixi-signature` header'ı virgülle ayrılmış `v2=<hex>` item listesidir — tek şema v2'dir; liste biçimi yalnız secret rotasyonundaki 24h grace penceresi içindir (`v2=<yeni>,v2=<eski>`).\nv2 = hex HMAC-SHA256(secret, `${eventId}.${timestamp}.${rawBody}`) — eventId=`x-lunixi-event-id`, timestamp=`x-lunixi-signature-timestamp` header'ının BİREBİR string'i (ISO 8601), rawBody=ham istek gövdesi (parse/re-serialize YOK). Item'ları timing-safe karşılaştırın; HERHANGİ biri eşleşirse geçerli, `v2=` item yoksa REDDEDİN.\nRetry: 12 deneme / ~52h (10s→24h, ±%20 jitter) → DEAD_LETTER; replay bütçeyi sıfırlar.",
+      "item": [
+        {
+          "name": "Create Signing Secret (Vault)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"{{org_id}}\",\n  \"secretKey\": \"webhook/{{org_id}}/LIVE/PAYMENT_GATEWAY/main\",\n  \"payload\": {\n    \"signingSecret\": \"whsec_{{$guid}}\"\n  }\n}"
+            },
+            "url": "{{base_url}}/api/v1/secrets",
+            "description": "Webhook imzalama secret'ını Sır Kasası'na yazar. Dönen secret id'yi `secret_id` değişkenine koyun; endpoint kaydında `secretRef` = `vault:{{secret_id}}`."
+          }
+        },
+        {
+          "name": "Create Webhook Endpoint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ödeme olayları — canlı\",\n  \"url\": \"https://merchant.example.com/webhooks/lunixi\",\n  \"productCode\": \"PAYMENT_GATEWAY\",\n  \"environment\": \"LIVE\",\n  \"secretRef\": \"vault:{{secret_id}}\",\n  \"eventTypes\": [\n    \"payment.*\"\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-endpoints"
+          }
+        },
+        {
+          "name": "List Webhook Endpoints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-endpoints"
+          }
+        },
+        {
+          "name": "Get Webhook Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-endpoints/{{webhook_endpoint_id}}"
+          }
+        },
+        {
+          "name": "Update Webhook Endpoint",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ödeme olayları — canlı\",\n  \"url\": \"https://merchant.example.com/webhooks/lunixi\",\n  \"eventTypes\": [\n    \"payment.captured\",\n    \"payment.failed\",\n    \"payment.refunded\"\n  ]\n}"
+            },
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-endpoints/{{webhook_endpoint_id}}"
+          }
+        },
+        {
+          "name": "Disable Webhook Endpoint",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-endpoints/{{webhook_endpoint_id}}"
+          }
+        },
+        {
+          "name": "Webhook Event Catalog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-event-catalog?productCode=PAYMENT_GATEWAY&environment=LIVE"
+          }
+        },
+        {
+          "name": "List Dead-Letter Deliveries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-deliveries?status=DEAD_LETTER"
+          }
+        },
+        {
+          "name": "Replay Delivery",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/v1/organizations/{{org_id}}/webhook-deliveries/{{delivery_id}}/replay",
+            "description": "DEAD_LETTER teslimatı yeniden kuyruğa alır; retry bütçesi sıfırlanır (12 deneme / ~52h)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "description": "Closed-loop wallet, merchant server-to-server API (`/api/v1/wallet/*`): end users, wallets, transfers, withdrawals, top-ups, payments, QR codes and bulk payouts. One request per route.\n\n**Signing.** Every wallet route is behind `SignatureGuard`: reads included, each request carries the per-request Ed25519 signature (`X-Key-Id`, `X-Date`, `X-Nonce`, `X-Signature`, `Digest` with a body). The collection pre-request script signs every request; nothing to do per request. Unsigned is `401 AUTH_HEADERS_MISSING`. The merchant, its programs and its end users come from the signing key.\n\n**The key needs** the `WALLET_SERVICE` product (403 `PRODUCT_NOT_ENABLED` otherwise) and the permission behind each route (403 `WALLET_INSUFFICIENT_SCOPE` otherwise):\n\n| Permission | Routes |\n|---|---|\n| `wallet:*:read` (`wallet:program:read`, `wallet:enduser:read`, `wallet:operation:read`, `wallet:qr:read`, …) | ping, reads, quotes, QR parse |\n| `wallet:program:manage` / `wallet:enduser:manage` (set-up: `wallet:program\\|enduser\\|limit\\|fee:manage`) | collection anchor; end users, wallets and accounts, wallet lookup, deposit instructions, freeze |\n| `wallet:operation:intervene` | money inside the wallet: W2W, card and agent top-ups, top-up refund, payments |\n| `wallet:bank-payout:operate` | IBAN transfers, bank withdrawals, simulated inbound credit (GROWTH plan) |\n| `wallet:qr:manage` | create and revoke QR |\n| `wallet:bulk:create` | corporate accounts, employee import and offboard, create and reject bulk payouts |\n| `wallet:bulk:approve` | submit, approve, process and retry bulk payouts (the approving key must differ from the creating key) |\n| `wallet:enduser:kyc-override` | update the KYC level |\n\nPayment request and collect also need a **wallet terminal bound to the signing key**.\n\n**Bodies.** The gateway rejects an unknown body field with 400 (`forbidNonWhitelisted`); the bodies here contain only fields the gateway accepts. **Amounts are minor units as digit strings**: `\"12550\"` is 125.50 TRY, never a number or a decimal.\n\n**Idempotency-Key.** Required on the routes that create or move something (the request has the header; 1-128 characters after trimming). It is a fresh `{{$guid}}` per send; to test a replay, pin it to a fixed value and send twice.\n\n**Two-step money.** W2W, IBAN transfer and bank withdrawal are initiate + complete; payment is request + approve. The first step answers `operationId` (payment: `requestId`), `integrityHash`, `nonce` and `otpRequired`; the folder stores them in `wallet_operation_id` (payment: `wallet_payment_operation_id`), `wallet_integrity_hash`, `wallet_nonce`, and the second step sends them back. Complete bodies also carry `operationId` equal to the path id. When `otpRequired` is true, add `\"otpCode\"` to the second step's body.\n\n**Run order.** Programs (fills `wallet_program_id`) → End users (create, chains the end user, wallet and account) → Wallets & accounts → Deposits (the simulated inbound credit funds the account on a test bank integration) → Corporate → Fees → Transfers W2W → Transfers IBAN → Bank withdrawals → Operations → Top-ups → Payments → QR → Bulk payouts → End-user lifecycle (freeze, last). Before running, set `wallet_destination_wallet_no` (another end user's wallet number), `wallet_business_end_user_id` (a BUSINESS end user), `wallet_rail_id`, `wallet_agent_id` and, for collect, `wallet_payment_code`.\n\nWallet responses never overwrite `payment_id` or `checkout_token`.",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Chains the ids the next wallet requests use. A wallet response carries its own",
+              "// ids (`id`, `paymentId`, `token`); the collection script leaves `payment_id` and",
+              "// `checkout_token` alone for /api/v1/wallet/ routes, and this script writes wallet_* only.",
+              "let walletEnvelope = {};",
+              "try { walletEnvelope = pm.response.json(); } catch (e) { walletEnvelope = {}; }",
+              "const walletBody = walletEnvelope && typeof walletEnvelope.data === 'object' && walletEnvelope.data !== null",
+              "  ? walletEnvelope.data",
+              "  : {};",
+              "const walletPath = pm.request.url.toString().replace(/^[a-z][a-z0-9+.-]*:\\/\\/[^\\/]*/i, '').split(/[?#]/)[0];",
+              "const walletRoute = pm.request.method.toUpperCase() + ' ' + walletPath.replace(/^\\/api\\/v1\\/wallet/, '');",
+              "function setWallet(name, value) {",
+              "  if (typeof value === 'string' && value !== '') pm.environment.set(name, value);",
+              "}",
+              "function setTwoStep(operationVariable, operationId) {",
+              "  setWallet(operationVariable, operationId);",
+              "  setWallet('wallet_integrity_hash', walletBody.integrityHash);",
+              "  setWallet('wallet_nonce', walletBody.nonce);",
+              "}",
+              "if (pm.response.code >= 200 && pm.response.code < 300) {",
+              "  if (walletRoute === 'GET /programs/me' && Array.isArray(walletBody.items) && walletBody.items[0] && !pm.environment.get('wallet_program_id')) {",
+              "    setWallet('wallet_program_id', walletBody.items[0].id);",
+              "  }",
+              "  if (walletRoute === 'POST /end-users' && walletBody.endUser) {",
+              "    setWallet('wallet_end_user_id', walletBody.endUser.id);",
+              "    const defaultWallet = walletBody.defaultWallet || {};",
+              "    setWallet('wallet_id', defaultWallet.id);",
+              "    setWallet('wallet_no', defaultWallet.walletNo);",
+              "    const accounts = Array.isArray(defaultWallet.accounts) ? defaultWallet.accounts : [];",
+              "    const account = accounts.find(function (a) { return a.currency === pm.environment.get('currency'); }) || accounts[0];",
+              "    if (account) setWallet('wallet_account_id', account.id);",
+              "  }",
+              "  if (/^POST \\/end-users\\/[^\\/]+\\/wallets$/.test(walletRoute)) setWallet('wallet_id', walletBody.id);",
+              "  if (/^POST \\/end-users\\/[^\\/]+\\/deposit-instructions$/.test(walletRoute) && walletBody.instruction) {",
+              "    setWallet('wallet_deposit_reference', walletBody.instruction.referenceCode);",
+              "    setWallet('wallet_deposit_iban', walletBody.instruction.assignedIban || walletBody.instruction.sharedIban);",
+              "  }",
+              "  if (walletRoute === 'POST /corporate-accounts' && walletBody.corporateAccount) {",
+              "    setWallet('wallet_corporate_account_id', walletBody.corporateAccount.id);",
+              "  }",
+              "  if (['POST /transfers/w2w', 'POST /transfers/w2iban', 'POST /withdrawals/bank'].indexOf(walletRoute) !== -1) {",
+              "    setTwoStep('wallet_operation_id', walletBody.operationId);",
+              "  }",
+              "  if (walletRoute === 'POST /topups/card') setWallet('wallet_topup_operation_id', walletBody.operationId);",
+              "  if (walletRoute === 'POST /payments/buy') setTwoStep('wallet_payment_operation_id', walletBody.requestId);",
+              "  if (walletRoute === 'POST /qr') {",
+              "    setWallet('wallet_qr_id', walletBody.id);",
+              "    setWallet('wallet_qr_payload', walletBody.payload);",
+              "  }",
+              "  if (walletRoute === 'POST /bulk-payouts' && walletBody.batch) setWallet('wallet_bulk_batch_id', walletBody.batch.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Programs",
+          "description": "The programs of the signing merchant. Run `List My Programs` first: it fills `wallet_program_id` when it is empty.",
+          "item": [
+            {
+              "name": "Ping Wallet",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Ping Wallet: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/ping",
+                "description": "Checks that the key reaches the wallet: signature, the `WALLET_SERVICE` product (403 `PRODUCT_NOT_ENABLED` otherwise) and the wallet permissions.\n\n**Permission:** a manage permission such as `wallet:program:manage` (the wallet's ping sits behind its management scope; a read-only key gets 403 `WALLET_INSUFFICIENT_SCOPE`).\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "List My Programs",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List My Programs: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/programs/me",
+                "description": "The wallet programs of the signing merchant: `{ items, nextCursor }`. Stores the first program's `id` in `wallet_program_id` when that variable is empty; set it yourself to use another program.\n\n**Permission:** `wallet:program:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Set Collection Anchor",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Set Collection Anchor: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/programs/{{wallet_program_id}}/collection-anchor",
+                "description": "Sets the end user whose wallet collects the program's merchant payments (`wallet_business_end_user_id`, a BUSINESS end user). Sending no `collectionEndUserId` clears the anchor. `expectedVersion` (the program `version`) guards against a concurrent change.\n\n**Permission:** `wallet:program:manage`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"collectionEndUserId\": \"{{wallet_business_end_user_id}}\",\n  \"reason\": \"Merchant payments are collected in the business wallet\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "End users",
+          "description": "An end user is the person (PERSONAL) or business (BUSINESS) who owns wallets in a program. `Create End User` also opens the default wallet and chains `wallet_end_user_id`, `wallet_id`, `wallet_no` and `wallet_account_id`.",
+          "item": [
+            {
+              "name": "Create End User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create End User: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-create-end-user-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/end-users",
+                "description": "Creates the end user and their default wallet with an account in `defaultCurrency`. Stores `endUser.id` in `wallet_end_user_id`, the default wallet in `wallet_id` / `wallet_no` and its account in `wallet_account_id`. The phone and `externalCustomerId` identify the person inside the program: change `wallet_phone` and `wallet_external_customer_id` to create another one.\n\n**Permission:** `wallet:enduser:manage`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"programId\": \"{{wallet_program_id}}\",\n  \"accountType\": \"PERSONAL\",\n  \"phone\": \"{{wallet_phone}}\",\n  \"externalCustomerId\": \"{{wallet_external_customer_id}}\",\n  \"displayName\": \"Ayse Yilmaz\",\n  \"defaultCurrency\": \"{{currency}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List End Users",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List End Users: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users?programId={{wallet_program_id}}&accountType=PERSONAL&status=ACTIVE&limit=20",
+                "description": "End users of the merchant, newest first. Filters: `programId`, `accountType`, `status`, `corporateAccountId`, `merchantCategoryState`; pages with `limit` (1-100) and `cursor`.\n\n**Permission:** `wallet:enduser:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get End User by External Id",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get End User by External Id: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users/by-external/{{wallet_external_customer_id}}?programId={{wallet_program_id}}",
+                "description": "Finds the end user by your own customer id (`externalCustomerId`). `programId` narrows the search when the same id is used in several programs.\n\n**Permission:** `wallet:enduser:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get End User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get End User: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}",
+                "description": "The end user: status, KYC level cache, masked phone and name, corporate link.\n\n**Permission:** `wallet:enduser:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get Balances",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Balances: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/balances",
+                "description": "Balances of every account of the end user, in minor units.\n\n**Permission:** `wallet:enduser:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get KYC Level",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get KYC Level: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/kyc-level",
+                "description": "The KYC level the wallet applies to the end user (`NONE`, `LOW`, `SUBSTANTIAL`, `HIGH`). Limits depend on it.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Update KYC Level",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Update KYC Level: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-update-kyc-level-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/kyc-level",
+                "description": "Records the KYC level from your own verification. `sourceRef` is your KYC session id (kept as evidence). `expectedCurrentLevel` makes the change fail with 409 when the level moved in between; remove it to overwrite.\n\n**Permission:** `wallet:enduser:kyc-override`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kycLevel\": \"SUBSTANTIAL\",\n  \"sourceRef\": \"kyc-session-{{$timestamp}}\",\n  \"reason\": \"Identity verified in our own KYC flow\",\n  \"expectedCurrentLevel\": \"NONE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Limits",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Limits: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/limits?operationType=W2W_TRANSFER&currency={{currency}}",
+                "description": "Limit usage of the end user per operation type. `operationType` (e.g. `W2W_TRANSFER`, `W2IBAN_WITHDRAW`, `WITHDRAW_BANK`, `PAYMENT_BUY`) and `currency` narrow the answer.\n\n**Permission:** `wallet:enduser:read`.\n**Idempotency-Key:** not used."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wallets & accounts",
+          "description": "An end user can have several wallets; a wallet has one account per currency. Transfers name the account (`wallet_account_id`), not the wallet.",
+          "item": [
+            {
+              "name": "Create Wallet",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create Wallet: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-create-wallet-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/wallets",
+                "description": "Opens another wallet for the end user. `currencies` (asset codes) opens accounts at once; without it the wallet has no account yet. Stores the new wallet in `wallet_id`, so `Create Wallet Account` adds the account to it. `wallet_account_id` keeps pointing at the default wallet's account.\n\n**Permission:** `wallet:enduser:manage`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Savings\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Create Wallet Account",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create Wallet Account: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-create-wallet-account-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/wallets/{{wallet_id}}/accounts",
+                "description": "Adds a currency account to the wallet in `wallet_id`. A wallet has at most one account per currency (409 otherwise).\n\n**Permission:** `wallet:enduser:manage`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"{{currency}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Lookup Wallet",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Lookup Wallet: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/wallets/lookup",
+                "description": "Resolves a 10-digit wallet number or a phone to `{ exists, walletNo, maskedName }`, to show the payer whom they are paying before a transfer. Send `walletNo` or `phone`.\n\n**Permission:** `wallet:enduser:manage`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"programId\": \"{{wallet_program_id}}\",\n  \"walletNo\": \"{{wallet_no}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deposits",
+          "description": "Bank transfer in: the end user pays to the IBAN of a deposit instruction with its reference code, and the wallet is credited when the bank reports the transfer.",
+          "item": [
+            {
+              "name": "Create Deposit Instruction",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create Deposit Instruction: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/deposit-instructions",
+                "description": "Bank transfer details for an account: IBAN and reference code. Stores `referenceCode` in `wallet_deposit_reference` and the IBAN (assigned or shared) in `wallet_deposit_iban`.\n\n**Permission:** `wallet:enduser:manage`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"walletAccountId\": \"{{wallet_account_id}}\",\n  \"currency\": \"{{currency}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Deposit Instructions",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Deposit Instructions: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/deposit-instructions",
+                "description": "Deposit instructions of the end user.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Simulate Inbound Credit (test)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Simulate Inbound Credit (test): 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/bank-integrations/inbound-credits",
+                "description": "**Test only.** Books an incoming bank transfer as the bank integration `wallet_rail_id` would report it, so the account in the deposit instruction is credited (2,000.00 here) and the transfers below have money to move. Only a bank integration that supports simulation accepts it; a real provider rejects it.\n\n**Permission:** `wallet:bank-payout:operate` (GROWTH plan).\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"programId\": \"{{wallet_program_id}}\",\n  \"railId\": \"{{wallet_rail_id}}\",\n  \"amount\": \"200000\",\n  \"currency\": \"{{currency}}\",\n  \"rawReference\": \"{{wallet_deposit_reference}}\",\n  \"senderName\": \"{{wallet_beneficiary_name}}\",\n  \"senderIban\": \"{{wallet_iban}}\",\n  \"creditedIban\": \"{{wallet_deposit_iban}}\",\n  \"receiptNumber\": \"pm-{{$timestamp}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corporate",
+          "description": "A corporate account groups the employees of a company inside a program. Its owner is a BUSINESS end user (`wallet_business_end_user_id`) whose account funds bulk payouts. Creating corporate accounts and importing or offboarding employees needs `wallet:bulk:create`.",
+          "item": [
+            {
+              "name": "Create Corporate Account",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create Corporate Account: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-create-corporate-account-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/corporate-accounts",
+                "description": "Creates a corporate account. `code` is unique in the program (upper-cased by the server). `ownerEndUserId` must be a BUSINESS end user; employees get accounts in `fundingCurrency`. Stores `corporateAccount.id` in `wallet_corporate_account_id`.\n\n**Permission:** `wallet:bulk:create`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"programId\": \"{{wallet_program_id}}\",\n  \"code\": \"PM{{$timestamp}}\",\n  \"name\": \"Acme Teknoloji A.S.\",\n  \"ownerEndUserId\": \"{{wallet_business_end_user_id}}\",\n  \"fundingCurrency\": \"{{currency}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Corporate Accounts",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Corporate Accounts: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/corporate-accounts?programId={{wallet_program_id}}&status=ACTIVE&limit=20",
+                "description": "Corporate accounts of the merchant. Filters: `programId`, `status` (`ACTIVE`, `ARCHIVED`); pages with `limit` and `cursor`.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Import Corporate Employees",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Import Corporate Employees: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-import-corporate-employees-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/corporate-accounts/{{wallet_corporate_account_id}}/employees/import",
+                "description": "Imports up to 1000 employees at once: each row creates (or links) an end user and links it to the corporate account. All or nothing: a 422 writes no row and lists the failing rows. Row fields: `phone` (required), `displayName`, `externalCustomerId`, `kycRef`.\n\n**Permission:** `wallet:bulk:create`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rows\": [\n    {\n      \"phone\": \"+905320000101\",\n      \"displayName\": \"Mehmet Demir\",\n      \"externalCustomerId\": \"{{wallet_employee_external_id}}\",\n      \"kycRef\": \"kyc-employee-001\"\n    },\n    {\n      \"phone\": \"+905320000102\",\n      \"displayName\": \"Zeynep Kaya\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Offboard Corporate Employees",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Offboard Corporate Employees: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-offboard-corporate-employees-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/corporate-accounts/{{wallet_corporate_account_id}}/employees/offboard",
+                "description": "Unlinks employees from the corporate account; their wallets stay. Each row names the employee by `endUserId` or `externalCustomerId`.\n\n**Permission:** `wallet:bulk:create`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rows\": [\n    {\n      \"externalCustomerId\": \"{{wallet_employee_external_id}}\"\n    }\n  ],\n  \"reason\": \"Employment ended\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fees",
+          "description": "Fee and tax an operation would cost under the program's active fee schedule.",
+          "item": [
+            {
+              "name": "Quote Fees",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Quote Fees: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/fees/quote",
+                "description": "Fee, tax and total charge for an operation type and amount (125.50 here). `at` (ISO-8601) quotes the schedule valid at another time.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"programId\": \"{{wallet_program_id}}\",\n  \"operationType\": \"W2W_TRANSFER\",\n  \"currency\": \"{{currency}}\",\n  \"amount\": \"12550\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Transfers W2W",
+          "description": "Wallet to wallet in two steps: initiate reserves the limit and answers `operationId`, `integrityHash`, `nonce` and `otpRequired`; complete commits it. Set `wallet_destination_wallet_no` to the wallet number of another end user first (create one with another `wallet_phone` and copy `defaultWallet.walletNo`).",
+          "item": [
+            {
+              "name": "Quote W2W Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Quote W2W Transfer: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/transfers/w2w/quote",
+                "description": "Fee and total for the transfer, without moving money. Its `scheduleVersionId`, sent to initiate, holds that fee. The destination is `destinationWalletNo` or `destinationPhone`.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"destinationWalletNo\": \"{{wallet_destination_wallet_no}}\",\n  \"amount\": \"12550\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Dinner share\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Initiate W2W Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Initiate W2W Transfer: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-initiate-w2w-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/transfers/w2w",
+                "description": "Step 1 of 2: reserves the limit. Stores `operationId`, `integrityHash` and `nonce` in `wallet_operation_id`, `wallet_integrity_hash`, `wallet_nonce`. With `otpDestination` and `otpChannel` (`EMAIL`, `SMS`, `PUSH`) the end user gets an OTP and the answer has `otpRequired: true`. The source account must belong to `endUserId` (404 `WALLET_NOT_FOUND` otherwise).\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"destinationWalletNo\": \"{{wallet_destination_wallet_no}}\",\n  \"amount\": \"12550\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Dinner share\",\n  \"locale\": \"tr-TR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Complete W2W Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Complete W2W Transfer: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-complete-w2w-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/transfers/w2w/{{wallet_operation_id}}/complete",
+                "description": "Step 2 of 2: commits the transfer. Sends back the `operationId`, `integrityHash` and `nonce` the initiate request chained (`wallet_operation_id`, `wallet_integrity_hash`, `wallet_nonce`). `operationId` is in the body too and must equal the id in the path. When the initiate answer has `otpRequired: true`, add `\"otpCode\": \"<code the end user received>\"` to the body (6-10 digits); with `stepUpRequired: true` add `\"trustedActionToken\"`. An empty `otpCode` is a 400, so the field is not in the body by default.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"operationId\": \"{{wallet_operation_id}}\",\n  \"integrityHash\": \"{{wallet_integrity_hash}}\",\n  \"nonce\": \"{{wallet_nonce}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Transfers IBAN",
+          "description": "Wallet to a bank account (IBAN) of anyone, in the same two steps as W2W. Needs `wallet:bank-payout:operate`, available on the GROWTH plan.",
+          "item": [
+            {
+              "name": "Quote IBAN Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Quote IBAN Transfer: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/transfers/w2iban/quote",
+                "description": "Fee and total for a transfer of 500.00 to `wallet_iban`, without moving money. `bankCode` is optional.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"beneficiaryName\": \"{{wallet_beneficiary_name}}\",\n  \"iban\": \"{{wallet_iban}}\",\n  \"amount\": \"50000\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Rent\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Initiate IBAN Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Initiate IBAN Transfer: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-initiate-w2iban-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/transfers/w2iban",
+                "description": "Step 1 of 2. Stores `operationId`, `integrityHash` and `nonce` in `wallet_operation_id`, `wallet_integrity_hash`, `wallet_nonce`. OTP works as for W2W.\n\n**Permission:** `wallet:bank-payout:operate` (GROWTH plan).\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"beneficiaryName\": \"{{wallet_beneficiary_name}}\",\n  \"iban\": \"{{wallet_iban}}\",\n  \"amount\": \"50000\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Rent\",\n  \"locale\": \"tr-TR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Complete IBAN Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Complete IBAN Transfer: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-complete-w2iban-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/transfers/w2iban/{{wallet_operation_id}}/complete",
+                "description": "Step 2 of 2: sends the transfer to the bank. Sends back the `operationId`, `integrityHash` and `nonce` the initiate request chained (`wallet_operation_id`, `wallet_integrity_hash`, `wallet_nonce`). `operationId` is in the body too and must equal the id in the path. When the initiate answer has `otpRequired: true`, add `\"otpCode\": \"<code the end user received>\"` to the body (6-10 digits); with `stepUpRequired: true` add `\"trustedActionToken\"`. An empty `otpCode` is a 400, so the field is not in the body by default.\n\n**Permission:** `wallet:bank-payout:operate` (GROWTH plan).\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"operationId\": \"{{wallet_operation_id}}\",\n  \"integrityHash\": \"{{wallet_integrity_hash}}\",\n  \"nonce\": \"{{wallet_nonce}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bank withdrawals",
+          "description": "Withdrawal to the end user's OWN bank account, in the same two steps. Needs `wallet:bank-payout:operate` (GROWTH plan).",
+          "item": [
+            {
+              "name": "Quote Bank Withdrawal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Quote Bank Withdrawal: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/withdrawals/bank/quote",
+                "description": "Fee and total for withdrawing 250.00 to the end user's own IBAN, without moving money.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"beneficiaryName\": \"{{wallet_beneficiary_name}}\",\n  \"iban\": \"{{wallet_iban}}\",\n  \"amount\": \"25000\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Withdrawal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Initiate Bank Withdrawal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Initiate Bank Withdrawal: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-initiate-bank-withdrawal-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/withdrawals/bank",
+                "description": "Step 1 of 2. Stores `operationId`, `integrityHash` and `nonce` in `wallet_operation_id`, `wallet_integrity_hash`, `wallet_nonce`. OTP works as for W2W.\n\n**Permission:** `wallet:bank-payout:operate` (GROWTH plan).\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"beneficiaryName\": \"{{wallet_beneficiary_name}}\",\n  \"iban\": \"{{wallet_iban}}\",\n  \"amount\": \"25000\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Withdrawal\",\n  \"locale\": \"tr-TR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Complete Bank Withdrawal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Complete Bank Withdrawal: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-complete-bank-withdrawal-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/withdrawals/bank/{{wallet_operation_id}}/complete",
+                "description": "Step 2 of 2: sends the withdrawal to the bank. Sends back the `operationId`, `integrityHash` and `nonce` the initiate request chained (`wallet_operation_id`, `wallet_integrity_hash`, `wallet_nonce`). `operationId` is in the body too and must equal the id in the path. When the initiate answer has `otpRequired: true`, add `\"otpCode\": \"<code the end user received>\"` to the body (6-10 digits); with `stepUpRequired: true` add `\"trustedActionToken\"`. An empty `otpCode` is a 400, so the field is not in the body by default.\n\n**Permission:** `wallet:bank-payout:operate` (GROWTH plan).\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"endUserId\": \"{{wallet_end_user_id}}\",\n  \"operationId\": \"{{wallet_operation_id}}\",\n  \"integrityHash\": \"{{wallet_integrity_hash}}\",\n  \"nonce\": \"{{wallet_nonce}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Withdrawal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Withdrawal: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/withdrawals/{{wallet_operation_id}}",
+                "description": "The withdrawal in `wallet_operation_id`: `{ operation, history }`. The bank result arrives later; follow it here or through the wallet webhooks.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Operations",
+          "description": "Every money movement is an operation. The requests below read the last operation chained into `wallet_operation_id`.",
+          "item": [
+            {
+              "name": "List Operations",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Operations: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/operations?endUserId={{wallet_end_user_id}}&limit=20",
+                "description": "Operations, newest first. Filters: `endUserId`, `walletAccountId`, `destinationWalletAccountId`, `status`, `operationType`; pages with `limit` (1-100) and `cursor`.\n\n**Permission:** `wallet:operation:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get Operation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Operation: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/operations/{{wallet_operation_id}}",
+                "description": "One operation with its status history: `{ operation, history }`.\n\n**Permission:** `wallet:operation:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get Operation Receipt",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Operation Receipt: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/operations/{{wallet_operation_id}}/receipt",
+                "description": "The receipt of a completed operation.\n\n**Permission:** `wallet:operation:read`.\n**Idempotency-Key:** not used."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Top-ups",
+          "description": "Money into the wallet by card or through a cash agent.",
+          "item": [
+            {
+              "name": "Start Card Top-up",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start Card Top-up: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-start-card-topup-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/topups/card",
+                "description": "Starts a card top-up of 1,000.00. Render `checkoutFormContent` (or follow `redirectUrl` / `threeDsHtml`); the account is credited when the card payment completes (`wallet.topup.completed`). Stores `operationId` in `wallet_topup_operation_id`; the answer's `paymentId` is the card payment and is not copied into `payment_id`. The saved-card fields pay with a stored card.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"creditWalletAccountId\": \"{{wallet_account_id}}\",\n  \"amount\": \"100000\",\n  \"currency\": \"{{currency}}\",\n  \"returnUrl\": \"{{callback_url}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Top-up",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Top-up: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/topups/{{wallet_topup_operation_id}}",
+                "description": "The top-up in `wallet_topup_operation_id`: `{ operation, history }`.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Refund Top-up",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Refund Top-up: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/topups/{{wallet_topup_operation_id}}/refund",
+                "description": "Refunds a completed card top-up to the card. `approverPrincipal` must differ from `requesterPrincipal` where the program requires two people. A top-up whose card payment has not completed cannot be refunded.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Customer asked for a refund\",\n  \"requesterPrincipal\": \"ops-alice\",\n  \"approverPrincipal\": \"ops-bob\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Agent Top-up",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Agent Top-up: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-agent-topup-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/agent-topups",
+                "description": "Cash top-up of 500.00 through an agent of the program (`wallet_agent_id`): the agent's float pays the end user's account.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"agentId\": \"{{wallet_agent_id}}\",\n  \"creditWalletAccountId\": \"{{wallet_account_id}}\",\n  \"amount\": \"50000\",\n  \"currency\": \"{{currency}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Payments",
+          "description": "The end user pays the merchant. The creditor is the **wallet terminal bound to the signing key**: without one, request and collect are 403 `WALLET_TERMINAL_*`. A `businessAccountId` in the body is refused.",
+          "item": [
+            {
+              "name": "Request Payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Request Payment: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-request-payment-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/payments/buy",
+                "description": "Asks the buyer (by `buyerWalletNo` or `buyerPhone`) to pay 49.90. The answer's `requestId` is the payment operation: stored in `wallet_payment_operation_id`, with `integrityHash` and `nonce` in `wallet_integrity_hash` / `wallet_nonce`.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": \"4990\",\n  \"currency\": \"{{currency}}\",\n  \"paymentPurpose\": \"Coffee\",\n  \"buyerWalletNo\": \"{{wallet_no}}\",\n  \"orderRef\": \"pm-{{$timestamp}}\",\n  \"cashierRef\": \"till-01\",\n  \"locale\": \"tr-TR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Approve Payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Approve Payment: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-approve-payment-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/payments/{{wallet_payment_operation_id}}/approve",
+                "description": "The buyer approves the payment requested above. `buyerEndUserId` names the buyer; the payment must be theirs. When the request answer has `otpRequired: true`, add `\"otpCode\": \"<code the end user received>\"` to the body (6-10 digits); with `stepUpRequired: true` add `\"trustedActionToken\"`. An empty `otpCode` is a 400, so the field is not in the body by default.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"buyerEndUserId\": \"{{wallet_end_user_id}}\",\n  \"integrityHash\": \"{{wallet_integrity_hash}}\",\n  \"nonce\": \"{{wallet_nonce}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Payment: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/payments/{{wallet_payment_operation_id}}",
+                "description": "The payment in `wallet_payment_operation_id`: `{ operation, history }`.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Collect by Payment Code",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Collect by Payment Code: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-collect-by-code-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/collect",
+                "description": "Collects with the one-time payment code the buyer shows at the till (`wallet_payment_code`, from the end user's app). One call: the code is used up and the payment is booked.\n\n**Permission:** `wallet:operation:intervene`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{wallet_payment_code}}\",\n  \"amount\": \"4990\",\n  \"currency\": \"{{currency}}\",\n  \"orderRef\": \"pm-{{$timestamp}}\",\n  \"paymentPurpose\": \"Coffee\",\n  \"locale\": \"tr-TR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Business Commission",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Business Commission: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/business-accounts/{{wallet_business_end_user_id}}/commission",
+                "description": "The active acceptance commission schedule of a business (`wallet_business_end_user_id`).\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            }
+          ]
+        },
+        {
+          "name": "QR",
+          "description": "QR codes to pay a person or the merchant. Static codes carry no amount; dynamic codes require one.",
+          "item": [
+            {
+              "name": "Create QR",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create QR: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-create-qr-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/qr",
+                "description": "Creates a dynamic person-to-person QR for 75.00 that expires in 15 minutes. `qrType`: `P2P_STATIC`, `P2P_DYNAMIC`, `MERCHANT_STATIC`, `MERCHANT_DYNAMIC`. Stores `id` in `wallet_qr_id` and the signed `payload` in `wallet_qr_payload`.\n\n**Permission:** `wallet:qr:manage`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"qrType\": \"P2P_DYNAMIC\",\n  \"currency\": \"{{currency}}\",\n  \"targetEndUserId\": \"{{wallet_end_user_id}}\",\n  \"programId\": \"{{wallet_program_id}}\",\n  \"amount\": \"7500\",\n  \"expiresInSeconds\": 900,\n  \"metadata\": {\n    \"source\": \"postman\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List QR",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List QR: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/qr?programId={{wallet_program_id}}&status=ACTIVE&limit=20",
+                "description": "QR codes. Filters: `programId`, `qrType`, `status`, `targetEndUserId`; pages with `limit` and `cursor`.\n\n**Permission:** `wallet:qr:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get QR",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get QR: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/qr/{{wallet_qr_id}}",
+                "description": "One QR code with its status (`ACTIVE`, `CONSUMED`, `EXPIRED`, `REVOKED`).\n\n**Permission:** `wallet:qr:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get QR Image",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get QR Image: 2xx image', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "  pm.expect(String(pm.response.headers.get('Content-Type') || '').split(';')[0]).to.be.oneOf(['image/svg+xml', 'image/png']);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/qr/{{wallet_qr_id}}/image?format=svg&scale=8",
+                "description": "The QR as an **image** (`image/svg+xml` or `image/png`), not the JSON envelope; an error is still JSON. `format`: `svg` (default) or `png`; `scale` 1-20.\n\n**Permission:** `wallet:qr:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Parse QR",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Parse QR: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/qr/parse",
+                "description": "Decodes a scanned QR payload: type, target, amount, currency, validity.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"payload\": \"{{wallet_qr_payload}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Revoke QR",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Revoke QR: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/qr/{{wallet_qr_id}}/revoke",
+                "description": "Revokes the QR in `wallet_qr_id`; it cannot be paid any more.\n\n**Permission:** `wallet:qr:manage`.\n**Idempotency-Key:** not used."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bulk payouts",
+          "description": "Many payouts from one source account, with maker-checker: one key creates and submits (it needs `wallet:bulk:create` and, for submit, `wallet:bulk:approve`), a **different key** with `wallet:bulk:approve` approves (the approver is the signing key; the creating key cannot approve: `WALLET_FOUR_EYES_VIOLATION`). Switch to the approver key's environment before `Approve` (`key_id` and its private key or signer; empty `access_token` so a new token is minted).",
+          "item": [
+            {
+              "name": "Create Bulk Payout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Create Bulk Payout: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-create-bulk-payout-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts",
+                "description": "Creates a DRAFT batch. Item fields: `targetType` (`WALLET` or `IBAN`), `targetRef` (wallet number or IBAN), `amount`, `beneficiaryName`. For a corporate account the source must be an account of its owner. Stores `batch.id` in `wallet_bulk_batch_id`.\n\n**Permission:** `wallet:bulk:create`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"programId\": \"{{wallet_program_id}}\",\n  \"sourceWalletAccountId\": \"{{wallet_account_id}}\",\n  \"currency\": \"{{currency}}\",\n  \"items\": [\n    {\n      \"targetType\": \"WALLET\",\n      \"targetRef\": \"{{wallet_destination_wallet_no}}\",\n      \"amount\": \"2500\"\n    },\n    {\n      \"targetType\": \"IBAN\",\n      \"targetRef\": \"{{wallet_iban}}\",\n      \"beneficiaryName\": \"{{wallet_beneficiary_name}}\",\n      \"amount\": \"5000\"\n    }\n  ],\n  \"reason\": \"October expense refunds\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "List Bulk Payouts",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Bulk Payouts: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts?programId={{wallet_program_id}}&limit=20",
+                "description": "Batches. Filters: `programId`, `status`; `limit` 1-100.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Get Bulk Payout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Bulk Payout: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}",
+                "description": "The batch with its counters (`itemCount`, `completedCount`, `failedCount`, `pendingCount`) and hold amounts.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "List Bulk Payout Items",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Bulk Payout Items: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}/items?limit=100",
+                "description": "Items of the batch with their result. Filters: `status`; `limit` 1-1000.\n\n**Permission:** `wallet:*:read`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Submit Bulk Payout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Submit Bulk Payout: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}/submit",
+                "description": "Maker: DRAFT → PENDING_APPROVAL.\n\n**Permission:** `wallet:bulk:approve`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Approve Bulk Payout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Approve Bulk Payout: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}/approve",
+                "description": "Checker: approves the batch (`approve: false` declines it with `reason`). **Sign with a different key** than the one that created and submitted the batch.\n\n**Permission:** `wallet:bulk:approve`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approve\": true,\n  \"reason\": \"Checked against the payroll list\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Process Bulk Payout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Process Bulk Payout: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}/process",
+                "description": "Pays the approved items. A large batch is processed in chunks: `hasMore: true` means items are left; call again or let the worker continue.\n\n**Permission:** `wallet:bulk:approve`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Retry Failed Bulk Payout Items",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Retry Failed Bulk Payout Items: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}/retry-failed",
+                "description": "Retries the failed items of a processed batch.\n\n**Permission:** `wallet:bulk:approve`.\n**Idempotency-Key:** not used."
+              }
+            },
+            {
+              "name": "Reject Bulk Payout",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Reject Bulk Payout: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/bulk-payouts/{{wallet_bulk_batch_id}}/reject",
+                "description": "Rejects a batch that is waiting for approval. It is the alternative to `Approve`: after the batch above was approved and processed this answers 409.\n\n**Permission:** `wallet:bulk:create`.\n**Idempotency-Key:** not used.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Wrong source account\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "End-user lifecycle",
+          "description": "Last on purpose: a frozen end user cannot move money, and the merchant API has no unfreeze.",
+          "item": [
+            {
+              "name": "Freeze End User",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Freeze End User: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "wallet-freeze-end-user-{{$guid}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/wallet/end-users/{{wallet_end_user_id}}/freeze",
+                "description": "Freezes the end user in `wallet_end_user_id`: their wallets stop moving money. There is no unfreeze route on the merchant API.\n\n**Permission:** `wallet:enduser:manage`.\n**Idempotency-Key:** required (a fresh one per send; pin it to replay).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Account review requested by compliance\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       ]
     }

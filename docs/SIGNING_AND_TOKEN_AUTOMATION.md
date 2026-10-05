@@ -5,8 +5,11 @@ Lunixi merchant API authentication has two phases:
 1. The merchant signs `POST /api/v1/auth/token` with its Ed25519 private key.
 2. The gateway returns a short-lived merchant access token.
 3. Normal API calls use `Authorization: Bearer <access_token>`.
+4. Step-up calls (create payment intent, direct 2D/3D payment, capture) also carry
+   a signature of that request, made with the same key. Without it they return `401`.
 
-The Postman workspace automates this so users do not copy-paste tokens manually.
+The Postman workspace automates this so users do not copy-paste tokens manually. The
+payment collections sign every request, so step-up calls work without extra steps.
 
 ## Canonical Signature Format
 
@@ -19,11 +22,25 @@ X-Date:<iso-date>
 X-Nonce:<uuid-or-random>
 ```
 
+For any other request, the second line is the request path with its query string,
+exactly as sent (percent-encoded):
+
+```text
+GET
+/api/v1/payments/cards?cardUserKey=postman-user-001
+X-Date:<iso-date>
+X-Nonce:<uuid-or-random>
+```
+
 For requests with a body, a digest line is appended:
 
 ```text
 Digest:SHA-256=<base64-sha256-body>
 ```
+
+The gateway computes the digest over the JSON body it parsed, re-serialised without
+whitespace. Send the body in that form (for example `JSON.stringify(body)`), otherwise
+the digest does not match.
 
 The signature is Ed25519 over the UTF-8 canonical string and is sent as Base64 in:
 
@@ -71,7 +88,11 @@ POST {{signer_url}}/token
 }
 ```
 
-4. Postman stores the token and sends the original API request.
+4. Postman stores the token.
+5. Postman calls `POST {{signer_url}}/sign` with the method, the request path and the
+   body of the request it is about to send. The signer returns `X-Key-Id`, `X-Date`,
+   `X-Nonce`, `X-Signature` and, when there is a body, `Digest`.
+6. Postman adds those headers and sends the original API request.
 
 Run:
 
@@ -120,7 +141,9 @@ How it works:
 3. It signs the token canonical string.
 4. It calls `/api/v1/auth/token`.
 5. It stores the returned access token.
-6. It sends the original request.
+6. It signs the original request (canonical string above) and adds `X-Key-Id`,
+   `X-Date`, `X-Nonce`, `X-Signature` and, when there is a body, `Digest`.
+7. It sends the original request.
 
 Supported private key formats:
 
