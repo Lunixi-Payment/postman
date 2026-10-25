@@ -2,20 +2,13 @@
 
 const http = require('node:http');
 const fs = require('node:fs');
-const path = require('node:path');
 const crypto = require('node:crypto');
 
-const repoRoot = path.resolve(__dirname, '../..');
-const fintechRoot = path.dirname(repoRoot);
-const defaultPaymentHtml = path.join(fintechRoot, 'pos-form-main/public/payment.html');
 const port = Number(process.env.POSTMAN_SIGNER_PORT || 8787);
 
 function readPrivateKey() {
   if (process.env.LUNIXI_PRIVATE_KEY) return process.env.LUNIXI_PRIVATE_KEY.replace(/\\n/g, '\n');
   if (process.env.LUNIXI_PRIVATE_KEY_PATH) return fs.readFileSync(process.env.LUNIXI_PRIVATE_KEY_PATH, 'utf8');
-  const html = fs.existsSync(defaultPaymentHtml) ? fs.readFileSync(defaultPaymentHtml, 'utf8') : '';
-  const match = html.match(/LOCAL_TEST_PEM\s*=\s*'([^']+)'/);
-  if (match) return match[1].replace(/\\n/g, '\n');
   throw new Error('No private key found. Set LUNIXI_PRIVATE_KEY_PATH or LUNIXI_PRIVATE_KEY.');
 }
 
@@ -139,6 +132,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, '127.0.0.1', () => {
   console.log(`Lunixi Postman signer listening on http://127.0.0.1:${port}`);
-  console.log(`Default key source: ${defaultPaymentHtml}`);
+  const keySource = process.env.LUNIXI_PRIVATE_KEY ? 'LUNIXI_PRIVATE_KEY'
+    : process.env.LUNIXI_PRIVATE_KEY_PATH ? 'LUNIXI_PRIVATE_KEY_PATH' : 'none (set LUNIXI_PRIVATE_KEY_PATH)';
+  console.log(`Key source: ${keySource}`);
 });
 

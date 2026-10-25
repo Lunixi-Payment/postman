@@ -5,7 +5,7 @@ Lunixi merchant API authentication has two phases:
 1. The merchant signs `POST /api/v1/auth/token` with its Ed25519 private key.
 2. The gateway returns a short-lived merchant access token.
 3. Normal API calls use `Authorization: Bearer <access_token>`.
-4. Step-up calls (create payment intent, direct 2D/3D payment, capture) also carry
+4. Step-up calls (create payment intent, `direct/payment`, capture) also carry
    a signature of that request, made with the same key. Without it they return `401`.
 
 The Postman workspace automates this so users do not copy-paste tokens manually. The
@@ -94,14 +94,7 @@ POST {{signer_url}}/token
    `X-Nonce`, `X-Signature` and, when there is a body, `Digest`.
 6. Postman adds those headers and sends the original API request.
 
-Run:
-
-```bash
-cd /Users/selimdestanci/Desktop/Fintech/entegrasyon/postman
-node tools/signer-server.js
-```
-
-Override key source:
+Run it from the collection folder with your private key, from a file:
 
 ```bash
 LUNIXI_PRIVATE_KEY_PATH=/absolute/path/private.pem node tools/signer-server.js
