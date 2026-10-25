@@ -1,4 +1,17 @@
+<p align="center">
+  <a href="https://lunixi.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Lunixi-Payment/postman/main/.github/assets/lunixi-logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/Lunixi-Payment/postman/main/.github/assets/lunixi-logo.svg" alt="Lunixi" height="64">
+    </picture>
+  </a>
+</p>
+
 # Lunixi Postman Workspace
+
+[![CI](https://github.com/Lunixi-Payment/postman/actions/workflows/ci.yml/badge.svg)](https://github.com/Lunixi-Payment/postman/actions/workflows/ci.yml) [![Postman](https://img.shields.io/badge/Postman-collection%20v2.1-FF6C37?logo=postman&logoColor=white)](https://learning.postman.com/collection-format/getting-started/overview/) [![Download](https://img.shields.io/badge/download-zip-informational)](https://github.com/Lunixi-Payment/postman/archive/refs/heads/main.zip) [![Docs](https://img.shields.io/badge/docs-docs.lunixi.com-FF6B35)](https://docs.lunixi.com/sdks/postman)
+
+**[Documentation](https://docs.lunixi.com/sdks/postman) · [Issues](https://github.com/Lunixi-Payment/postman/issues) · [Security](https://github.com/Lunixi-Payment/postman/blob/main/SECURITY.md)**
 
 Professional Postman workspace for Lunixi payment integrations.
 

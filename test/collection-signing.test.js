@@ -2426,7 +2426,7 @@ for (const profile of ['standalone', 'local-signer']) {
       const [lunixiOrder, externalOrder] = gateway.insuranceIssued.orders;
       assert.ok(lunixiQuote && externalQuote && lunixiOrder && externalOrder, 'two quotes from context.items and two orders were created');
 
-      // Quote on a payment's recorded insurance data (OV-06): nothing but type, currency and the payment.
+      // Quote on a payment's recorded insurance data: nothing but type, currency and the payment.
       assert.deepEqual(sent('Create Insurance Quote (paymentIntentId, merchant data)').body, {
         insuranceType: INSURANCE_ENVIRONMENT.insurance_type,
         currency: environment.store.get('currency'),

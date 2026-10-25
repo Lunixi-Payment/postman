@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  collections:
+    name: Collections and environments
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Valid Postman v2.1 files with no secrets in environments
+        run: node .github/scripts/check-collections.js
+      - name: Signer syntax
+        run: node --check tools/signer-server.js
