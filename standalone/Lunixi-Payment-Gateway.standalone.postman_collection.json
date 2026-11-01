@@ -295,7 +295,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout smoke test\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-001\",\n      \"price\": {{amount_minor}},\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}"
+              "raw": "{\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout smoke test\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-001\",\n      \"price\": \"{{amount_minor}}\",\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}"
             },
             "url": "{{base_url}}/api/v1/payments/intents"
           }
@@ -316,7 +316,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}-insured\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout with an insured basket item\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"item-1\",\n      \"price\": {{amount_minor}},\n      \"name\": \"Izmir-Ankara train ticket\",\n      \"category1\": \"ticket\",\n      \"itemType\": \"VIRTUAL\",\n      \"insuranceCategory\": \"TICKET\",\n      \"insuranceTypes\": [\"TICKET_CANCELLATION\"],\n      \"insuranceContext\": {\n        \"transportMode\": \"TRAIN\",\n        \"carrier\": \"TCDD\",\n        \"departureAt\": \"2027-06-15T09:30:00+03:00\",\n        \"originCity\": \"Izmir\",\n        \"destinationCity\": \"Ankara\",\n        \"isPromotional\": false\n      }\n    }\n  ]\n}"
+              "raw": "{\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}-insured\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout with an insured basket item\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"item-1\",\n      \"price\": \"{{amount_minor}}\",\n      \"name\": \"Izmir-Ankara train ticket\",\n      \"category1\": \"ticket\",\n      \"itemType\": \"VIRTUAL\",\n      \"insuranceCategory\": \"TICKET\",\n      \"insuranceTypes\": [\"TICKET_CANCELLATION\"],\n      \"insuranceContext\": {\n        \"transportMode\": \"TRAIN\",\n        \"carrier\": \"TCDD\",\n        \"departureAt\": \"2027-06-15T09:30:00+03:00\",\n        \"originCity\": \"Izmir\",\n        \"destinationCity\": \"Ankara\",\n        \"isPromotional\": false\n      }\n    }\n  ]\n}"
             },
             "url": "{{base_url}}/api/v1/payments/intents",
             "description": "Same as Create Checkout Intent, with the optional insurance fields on a basket item. A payment takes them on this route only (Checkout Form); `direct/payment` and the marketplace intent answer them with 400. The insurance requests take the same item in `context.items`. `insuranceCategory` is the item kind (TICKET, HOTEL, EVENT, DEVICE, ELECTRONICS, VEHICLE, TRAVEL, HOME, HEALTH, PET, MICROMOBILITY, MUSICAL_INSTRUMENT, SHIPMENT, EDUCATION) and is required when `insuranceTypes`, `insuranceValueAmount`, `insuranceContext` or `insuranceData` is sent. `insuranceTypes` narrows the category's insurance types; `insuranceValueAmount` is the insured value of one unit in minor units (default: the unit price); `insuranceEligible: false` turns insurance off for the item. `insuranceContext` prefills the type's fields (the buyer can change them) and carries no personal data; an unknown key is a 400. The personal data the quote needs goes in `insuranceData` (next request). With any insurance field in the basket, item `id`s must be unique. The fields do not reach the payment provider; when insurance is not offered the payment goes on unchanged. `itemType` is PHYSICAL or VIRTUAL."
@@ -338,7 +338,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}-insurance-data\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout with an insured basket item and its insurance data\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"item-1\",\n      \"price\": {{amount_minor}},\n      \"name\": \"Izmir-Ankara train ticket\",\n      \"category1\": \"ticket\",\n      \"itemType\": \"VIRTUAL\",\n      \"insuranceCategory\": \"TICKET\",\n      \"insuranceTypes\": [\n        \"TICKET_CANCELLATION\"\n      ],\n      \"insuranceContext\": {\n        \"transportMode\": \"TRAIN\",\n        \"carrier\": \"TCDD\",\n        \"departureAt\": \"2027-06-15T09:30:00+03:00\",\n        \"originCity\": \"Izmir\",\n        \"destinationCity\": \"Ankara\",\n        \"isPromotional\": false\n      },\n      \"insuranceData\": {\n        \"insured\": [\n          {\n            \"identityType\": \"PASSPORT\",\n            \"identityNumber\": \"P0000000\",\n            \"birthDate\": \"1990-01-01\",\n            \"email\": \"insured@example.com\"\n          }\n        ],\n        \"tickets\": {\n          \"priceAmount\": {{amount_minor}},\n          \"pnr\": \"SAMPLE1\",\n          \"ticketNumber\": \"SAMPLE-0001\"\n        }\n      }\n    }\n  ]\n}"
+              "raw": "{\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}-insurance-data\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout with an insured basket item and its insurance data\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"item-1\",\n      \"price\": \"{{amount_minor}}\",\n      \"name\": \"Izmir-Ankara train ticket\",\n      \"category1\": \"ticket\",\n      \"itemType\": \"VIRTUAL\",\n      \"insuranceCategory\": \"TICKET\",\n      \"insuranceTypes\": [\n        \"TICKET_CANCELLATION\"\n      ],\n      \"insuranceContext\": {\n        \"transportMode\": \"TRAIN\",\n        \"carrier\": \"TCDD\",\n        \"departureAt\": \"2027-06-15T09:30:00+03:00\",\n        \"originCity\": \"Izmir\",\n        \"destinationCity\": \"Ankara\",\n        \"isPromotional\": false\n      },\n      \"insuranceData\": {\n        \"insured\": [\n          {\n            \"identityType\": \"PASSPORT\",\n            \"identityNumber\": \"P0000000\",\n            \"birthDate\": \"1990-01-01\",\n            \"email\": \"insured@example.com\"\n          }\n        ],\n        \"tickets\": {\n          \"priceAmount\": \"{{amount_minor}}\",\n          \"pnr\": \"SAMPLE1\",\n          \"ticketNumber\": \"SAMPLE-0001\"\n        }\n      }\n    }\n  ]\n}"
             },
             "url": "{{base_url}}/api/v1/payments/intents",
             "description": "Same as Create Checkout Intent (Insured Item), plus `insuranceData` on the ticket: what the quote needs that only you know (the insured, the PNR, the ticket number …), so the buyer is not asked for it again. The keys are the root fields of the type's quote body: `policyholder`, `insured` and the type object (`tickets`, `stay`, `device`, `product`, `vehicle`, `trip`, `rental`, `instrument`, `event`, `accident`, `procedure`, `pet`, `residence`, `abroadStay`, `property`, `health`); field names and formats are those of the insurance types reference. A list type object (`tickets`) is ONE object here, for this item, without `basketItemId` (the item `id` is used).\n\nPartial data is allowed: the Checkout Form asks the buyer only for what is missing, and prices the insurance on its own when nothing is; the buyer still ticks the box and the insurer's consent. `insuranceCategory` is required with it; an insurance premium item (`id` `inso_…`) cannot carry it; leave it out instead of sending `{}`. The gateway checks the shape (an object of at most 16 KB as JSON, known roots, `insured` 1–10 objects, the format of each known field, no `null`) and answers `400` with the field path (`basketItems.0.insuranceData.tickets`), never the value. Data the type's schema does not accept does not stop the payment: it is not stored, the buyer is asked for it and `Insurance › List Insurance Products for a Payment` shows why in `insuranceDataIssues`.\n\nIt is personal data: it never reaches the payment provider or the payment record, Lunixi stores it encrypted for the insurance quote only and erases it after the payment intent expires. The values here are made up (a passport number of zeros, a sample PNR and ticket number); never put a real person's data into a shared workspace. Next: `Insurance › Products & Reference Values › List Insurance Products for a Payment` and `Create Insurance Quote (paymentIntentId, merchant data)` with this `payment_id`."
@@ -360,7 +360,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"preauth\": true,\n  \"orderId\": \"preauth-{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout smoke test\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-001\",\n      \"price\": {{amount_minor}},\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}"
+              "raw": "{\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"preauth\": true,\n  \"orderId\": \"preauth-{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout smoke test\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-001\",\n      \"price\": \"{{amount_minor}}\",\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}"
             },
             "url": "{{base_url}}/api/v1/payments/intents",
             "description": "Hosted checkout with pre-authorization (`preauth: true`): the amount is held and the payment becomes `AUTHORIZED`. Take it with **Capture Payment** or release it with **Void Payment**. Without `preauth` (or `false`) the amount is captured at once."
@@ -453,7 +453,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\",\n  \"amount\": {{amount_minor}},\n  \"reason\": \"postman-test\"\n}"
+              "raw": "{\n  \"paymentIntentId\": \"{{payment_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"reason\": \"postman-test\"\n}"
             },
             "url": "{{base_url}}/api/v1/payments/{{payment_id}}/refund"
           }
@@ -594,7 +594,7 @@
             "description": "Faturana Yansıt (`MOBILE_BILLING`). `mobileBilling.providerCode` is the provider from **List Payment Methods** (`method_mobile_billing_provider_code`). In the API it may be left out: the platform then picks one of the connected providers. Send it when you let your buyer pick (with more than one provider connected, as the Checkout Form does). `mobileBilling.gsmNumber` is the line to bill (provider `inputFields`); when omitted, `buyer.gsmNumber` is used. The answer is `202` with an `OTP` action; the code is sent to the line. `preauth: true` is refused with 422 `payment.preauth.unsupported_for_method` (not supported by this method).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"MOBILE_BILLING\",\n  \"orderId\": \"mb-{{order_id}}\",\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": {{amount_minor}}, \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"VIRTUAL\" }\n  ],\n  \"mobileBilling\": {\n    \"providerCode\": \"{{method_mobile_billing_provider_code}}\",\n    \"gsmNumber\": \"{{method_gsm_number}}\"\n  }\n}",
+              "raw": "{\n  \"paymentMethod\": \"MOBILE_BILLING\",\n  \"orderId\": \"mb-{{order_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": \"{{amount_minor}}\", \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"VIRTUAL\" }\n  ],\n  \"mobileBilling\": {\n    \"providerCode\": \"{{method_mobile_billing_provider_code}}\",\n    \"gsmNumber\": \"{{method_gsm_number}}\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -697,7 +697,7 @@
             "description": "A wallet (`WALLET`). `wallet.providerCode` is the wallet from **List Payment Methods** (`method_wallet_provider_code`); required when more than one wallet is connected. The fields are the wallet's `inputFields`. The answer is `202` with the wallet's action (`OTP`, `APP_APPROVAL`).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"WALLET\",\n  \"orderId\": \"wallet-{{order_id}}\",\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"wallet\": {\n    \"providerCode\": \"{{method_wallet_provider_code}}\",\n    \"gsmNumber\": \"{{method_gsm_number}}\"\n  }\n}",
+              "raw": "{\n  \"paymentMethod\": \"WALLET\",\n  \"orderId\": \"wallet-{{order_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"wallet\": {\n    \"providerCode\": \"{{method_wallet_provider_code}}\",\n    \"gsmNumber\": \"{{method_gsm_number}}\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -737,7 +737,7 @@
             "description": "Card through the common endpoint without 3D Secure (`force3D` left out). The answer is `200` with the final status; when the bank still asks for 3D Secure it is `202` with a `REDIRECT` action, as in **Direct Payment - Card (3D Secure)**.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"orderId\": \"card-{{order_id}}\",\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": {{amount_minor}}, \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}",
+              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"orderId\": \"card-{{order_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": \"{{amount_minor}}\", \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -777,7 +777,7 @@
             "description": "Card through the common endpoint with 3D Secure (`force3D: true`). The answer is `202` with a `REDIRECT` action: open `payment_action_redirect_url` in a browser; the buyer returns to `callbackUrl` with the signed result form.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"orderId\": \"card-3d-{{order_id}}\",\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"force3D\": true,\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": {{amount_minor}}, \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}",
+              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"orderId\": \"card-3d-{{order_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"force3D\": true,\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": \"{{amount_minor}}\", \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -817,7 +817,7 @@
             "description": "Card pre-authorization (`preauth: true`), without 3D Secure: the amount is held and the payment becomes `AUTHORIZED`. Take it with **Capture Payment** or release it with **Void Payment**.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"orderId\": \"card-preauth-{{order_id}}\",\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"preauth\": true,\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": {{amount_minor}}, \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}",
+              "raw": "{\n  \"paymentMethod\": \"CARD\",\n  \"orderId\": \"card-preauth-{{order_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"preauth\": true,\n  \"card\": {\n    \"cardHolderName\": \"Ada Yilmaz\",\n    \"cardNumber\": \"5400000000000004\",\n    \"expireMonth\": \"12\",\n    \"expireYear\": \"28\",\n    \"cvcNumber\": \"123\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"{{method_gsm_number}}\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    { \"id\": \"SKU-001\", \"price\": \"{{amount_minor}}\", \"name\": \"Demo Product\", \"category1\": \"Demo\", \"itemType\": \"PHYSICAL\" }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -896,7 +896,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\n  \"totalAmount\": 10000,\n  \"currency\": \"{{currency}}\",\n  \"ownerRef\": \"{{card_user_key}}\",\n  \"orderId\": \"split-cards-{{order_id}}\",\n  \"legs\": [\n    { \"cardToken\": \"{{stored_card_token}}\", \"amount\": 6000 },\n    { \"cardToken\": \"{{split_second_card_token}}\", \"amount\": 4000 }\n  ]\n}"
+              "raw": "{\n  \"totalAmount\": \"10000\",\n  \"currency\": \"{{currency}}\",\n  \"ownerRef\": \"{{card_user_key}}\",\n  \"orderId\": \"split-cards-{{order_id}}\",\n  \"legs\": [\n    { \"cardToken\": \"{{stored_card_token}}\", \"amount\": \"6000\" },\n    { \"cardToken\": \"{{split_second_card_token}}\", \"amount\": \"4000\" }\n  ]\n}"
             }
           }
         },
@@ -939,7 +939,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\n  \"totalAmount\": 10000,\n  \"currency\": \"{{currency}}\",\n  \"ownerRef\": \"{{card_user_key}}\",\n  \"orderId\": \"{{split_order_id}}\",\n  \"legs\": [\n    { \"cardToken\": \"{{stored_card_token}}\", \"amount\": 6000 },\n    {\n      \"paymentMethod\": \"MOBILE_BILLING\",\n      \"amount\": 4000,\n      \"mobileBilling\": {\n        \"providerCode\": \"{{method_mobile_billing_provider_code}}\",\n        \"gsmNumber\": \"{{method_gsm_number}}\"\n      }\n    }\n  ]\n}"
+              "raw": "{\n  \"totalAmount\": \"10000\",\n  \"currency\": \"{{currency}}\",\n  \"ownerRef\": \"{{card_user_key}}\",\n  \"orderId\": \"{{split_order_id}}\",\n  \"legs\": [\n    { \"cardToken\": \"{{stored_card_token}}\", \"amount\": \"6000\" },\n    {\n      \"paymentMethod\": \"MOBILE_BILLING\",\n      \"amount\": \"4000\",\n      \"mobileBilling\": {\n        \"providerCode\": \"{{method_mobile_billing_provider_code}}\",\n        \"gsmNumber\": \"{{method_gsm_number}}\"\n      }\n    }\n  ]\n}"
             }
           }
         },
@@ -1018,7 +1018,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\n  \"totalAmount\": 10000,\n  \"currency\": \"{{currency}}\",\n  \"ownerRef\": \"{{card_user_key}}\",\n  \"orderId\": \"{{split_order_id}}\",\n  \"legs\": [\n    { \"cardToken\": \"{{stored_card_token}}\", \"amount\": 6000 },\n    {\n      \"paymentMethod\": \"MOBILE_BILLING\",\n      \"amount\": 4000,\n      \"mobileBilling\": {\n        \"providerCode\": \"{{method_mobile_billing_provider_code}}\",\n        \"gsmNumber\": \"{{method_gsm_number}}\"\n      }\n    }\n  ]\n}"
+              "raw": "{\n  \"totalAmount\": \"10000\",\n  \"currency\": \"{{currency}}\",\n  \"ownerRef\": \"{{card_user_key}}\",\n  \"orderId\": \"{{split_order_id}}\",\n  \"legs\": [\n    { \"cardToken\": \"{{stored_card_token}}\", \"amount\": \"6000\" },\n    {\n      \"paymentMethod\": \"MOBILE_BILLING\",\n      \"amount\": \"4000\",\n      \"mobileBilling\": {\n        \"providerCode\": \"{{method_mobile_billing_provider_code}}\",\n        \"gsmNumber\": \"{{method_gsm_number}}\"\n      }\n    }\n  ]\n}"
             }
           }
         },
@@ -1102,7 +1102,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\n  \"amount\": 1500,\n  \"reason\": \"postman-test\"\n}"
+              "raw": "{\n  \"amount\": \"1500\",\n  \"reason\": \"postman-test\"\n}"
             }
           }
         }
@@ -1166,7 +1166,7 @@
             "description": "Hosted checkout pinned to Senetle Ödeme (`paymentMethod: PROMISSORY_NOTE`) with your plan in `promissoryNote.schedule`: the form shows the notes and the buyer does not choose a note count. Leave `promissoryNote` out to let the buyer choose the number of notes within your connection limits. Only the platform rules (amounts, dates, order, at most 24 rows) are checked here; your connection limits are checked when the notes are issued.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": 300000,\n  \"currency\": \"TRY\",\n  \"orderId\": \"promissory-note-intent-{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"paymentMethod\": \"PROMISSORY_NOTE\",\n  \"promissoryNote\": {\n    \"schedule\": [\n      {\n        \"amount\": 100000,\n        \"dueDate\": \"{{promissory_note_due_date_1}}\"\n      },\n      {\n        \"amount\": 200000,\n        \"dueDate\": \"{{promissory_note_due_date_2}}\"\n      }\n    ]\n  },\n  \"description\": \"Postman promissory-note checkout\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"10000000146\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-PN-001\",\n      \"price\": 300000,\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}",
+              "raw": "{\n  \"amount\": \"300000\",\n  \"currency\": \"TRY\",\n  \"orderId\": \"promissory-note-intent-{{order_id}}\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"paymentMethod\": \"PROMISSORY_NOTE\",\n  \"promissoryNote\": {\n    \"schedule\": [\n      {\n        \"amount\": \"100000\",\n        \"dueDate\": \"{{promissory_note_due_date_1}}\"\n      },\n      {\n        \"amount\": \"200000\",\n        \"dueDate\": \"{{promissory_note_due_date_2}}\"\n      }\n    ]\n  },\n  \"description\": \"Postman promissory-note checkout\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"10000000146\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"SKU-PN-001\",\n      \"price\": \"300000\",\n      \"name\": \"Demo Product\",\n      \"category1\": \"Demo\",\n      \"itemType\": \"PHYSICAL\"\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1206,7 +1206,7 @@
             "description": "Notes by count (`noteCount`, a string from the `noteCount` options): the amount is split evenly (the remaining minor units go to the last note) and due dates follow your connection settings. A corporate debtor (`debtorType: CORPORATE`) needs the conditional fields `companyTitle` and `taxNumber` (VKN); with `INDIVIDUAL` they must be left out. `guarantors` is a `GROUP` field (at most 5 for this provider).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"PROMISSORY_NOTE\",\n  \"orderId\": \"promissory-note-count-{{order_id}}\",\n  \"amount\": {{amount_minor}},\n  \"currency\": \"TRY\",\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"10000000146\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"promissoryNote\": {\n    \"noteCount\": \"{{promissory_note_count}}\",\n    \"debtorType\": \"CORPORATE\",\n    \"companyTitle\": \"Example Trade Ltd\",\n    \"taxNumber\": \"9876543217\",\n    \"birthDate\": \"1990-01-01\",\n    \"address\": {\n      \"provinceCode\": \"{{promissory_note_province_code}}\",\n      \"districtCode\": \"{{promissory_note_district_code}}\",\n      \"neighborhoodCode\": \"{{promissory_note_neighborhood_code}}\",\n      \"line\": \"Example Street 1\"\n    },\n    \"guarantors\": [\n      {\n        \"identityNumber\": \"20000000046\",\n        \"name\": \"Can\",\n        \"surname\": \"Demir\",\n        \"birthDate\": \"1985-05-05\",\n        \"gsmNumber\": \"+905350000001\"\n      }\n    ]\n  }\n}",
+              "raw": "{\n  \"paymentMethod\": \"PROMISSORY_NOTE\",\n  \"orderId\": \"promissory-note-count-{{order_id}}\",\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"TRY\",\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"10000000146\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"promissoryNote\": {\n    \"noteCount\": \"{{promissory_note_count}}\",\n    \"debtorType\": \"CORPORATE\",\n    \"companyTitle\": \"Example Trade Ltd\",\n    \"taxNumber\": \"9876543217\",\n    \"birthDate\": \"1990-01-01\",\n    \"address\": {\n      \"provinceCode\": \"{{promissory_note_province_code}}\",\n      \"districtCode\": \"{{promissory_note_district_code}}\",\n      \"neighborhoodCode\": \"{{promissory_note_neighborhood_code}}\",\n      \"line\": \"Example Street 1\"\n    },\n    \"guarantors\": [\n      {\n        \"identityNumber\": \"20000000046\",\n        \"name\": \"Can\",\n        \"surname\": \"Demir\",\n        \"birthDate\": \"1985-05-05\",\n        \"gsmNumber\": \"+905350000001\"\n      }\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1246,7 +1246,7 @@
             "description": "Notes by your schedule: one note per row, amounts adding up to `amount`. The answer is `200` with `status: CAPTURED` and no `action`; the folder chains `paymentId` into `payment_id`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"PROMISSORY_NOTE\",\n  \"orderId\": \"promissory-note-{{order_id}}\",\n  \"amount\": 300000,\n  \"currency\": \"TRY\",\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"10000000146\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"promissoryNote\": {\n    \"schedule\": [\n      {\n        \"amount\": 100000,\n        \"dueDate\": \"{{promissory_note_due_date_1}}\"\n      },\n      {\n        \"amount\": 200000,\n        \"dueDate\": \"{{promissory_note_due_date_2}}\"\n      }\n    ],\n    \"debtorType\": \"INDIVIDUAL\",\n    \"birthDate\": \"1990-01-01\",\n    \"address\": {\n      \"provinceCode\": \"{{promissory_note_province_code}}\",\n      \"districtCode\": \"{{promissory_note_district_code}}\",\n      \"neighborhoodCode\": \"{{promissory_note_neighborhood_code}}\",\n      \"line\": \"Example Street 1\"\n    }\n  }\n}",
+              "raw": "{\n  \"paymentMethod\": \"PROMISSORY_NOTE\",\n  \"orderId\": \"promissory-note-{{order_id}}\",\n  \"amount\": \"300000\",\n  \"currency\": \"TRY\",\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"10000000146\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"promissoryNote\": {\n    \"schedule\": [\n      {\n        \"amount\": \"100000\",\n        \"dueDate\": \"{{promissory_note_due_date_1}}\"\n      },\n      {\n        \"amount\": \"200000\",\n        \"dueDate\": \"{{promissory_note_due_date_2}}\"\n      }\n    ],\n    \"debtorType\": \"INDIVIDUAL\",\n    \"birthDate\": \"1990-01-01\",\n    \"address\": {\n      \"provinceCode\": \"{{promissory_note_province_code}}\",\n      \"districtCode\": \"{{promissory_note_district_code}}\",\n      \"neighborhoodCode\": \"{{promissory_note_neighborhood_code}}\",\n      \"line\": \"Example Street 1\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1293,7 +1293,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"paymentId\": \"7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d\",\n    \"providerCode\": \"EXAMPLE_PROVIDER\",\n    \"documentType\": \"PROMISSORY_NOTE\",\n    \"rowSerialNumber\": \"ROW-0001\",\n    \"currency\": \"TRY\",\n    \"totalAmount\": 300000,\n    \"notes\": [\n      {\n        \"serialNumber\": \"NOTE-0001\",\n        \"sequence\": 1,\n        \"amount\": 100000,\n        \"dueDate\": \"2030-01-15\",\n        \"status\": \"ISSUED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": null\n      },\n      {\n        \"serialNumber\": \"NOTE-0002\",\n        \"sequence\": 2,\n        \"amount\": 200000,\n        \"dueDate\": \"2030-02-15\",\n        \"status\": \"ISSUED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": null\n      }\n    ]\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-12T09:00:00.000Z\",\n  \"requestId\": \"req_5d2e8b1c\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"paymentId\": \"7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d\",\n    \"providerCode\": \"EXAMPLE_PROVIDER\",\n    \"documentType\": \"PROMISSORY_NOTE\",\n    \"rowSerialNumber\": \"ROW-0001\",\n    \"currency\": \"TRY\",\n    \"totalAmount\": \"300000\",\n    \"notes\": [\n      {\n        \"serialNumber\": \"NOTE-0001\",\n        \"sequence\": 1,\n        \"amount\": \"100000\",\n        \"dueDate\": \"2030-01-15\",\n        \"status\": \"ISSUED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": null\n      },\n      {\n        \"serialNumber\": \"NOTE-0002\",\n        \"sequence\": 2,\n        \"amount\": \"200000\",\n        \"dueDate\": \"2030-02-15\",\n        \"status\": \"ISSUED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": null\n      }\n    ]\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-12T09:00:00.000Z\",\n  \"requestId\": \"req_5d2e8b1c\"\n}"
             }
           ]
         },
@@ -1385,7 +1385,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"paymentId\": \"7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d\",\n    \"providerCode\": \"EXAMPLE_PROVIDER\",\n    \"documentType\": \"PROMISSORY_NOTE\",\n    \"rowSerialNumber\": \"ROW-0001\",\n    \"currency\": \"TRY\",\n    \"totalAmount\": 300000,\n    \"notes\": [\n      {\n        \"serialNumber\": \"NOTE-0001\",\n        \"sequence\": 1,\n        \"amount\": 100000,\n        \"dueDate\": \"2030-01-15\",\n        \"status\": \"CANCELLED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": \"2026-10-12T09:00:00.000Z\"\n      },\n      {\n        \"serialNumber\": \"NOTE-0002\",\n        \"sequence\": 2,\n        \"amount\": 200000,\n        \"dueDate\": \"2030-02-15\",\n        \"status\": \"ISSUED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": null\n      }\n    ],\n    \"cancelResults\": [\n      {\n        \"serialNumber\": \"NOTE-0001\",\n        \"result\": \"CANCELLED\",\n        \"errorCode\": null\n      },\n      {\n        \"serialNumber\": \"NOTE-0002\",\n        \"result\": \"FAILED\",\n        \"errorCode\": \"payment.promissory_note.provider_unavailable\"\n      }\n    ]\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-12T09:00:00.000Z\",\n  \"requestId\": \"req_5d2e8b1c\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"paymentId\": \"7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d\",\n    \"providerCode\": \"EXAMPLE_PROVIDER\",\n    \"documentType\": \"PROMISSORY_NOTE\",\n    \"rowSerialNumber\": \"ROW-0001\",\n    \"currency\": \"TRY\",\n    \"totalAmount\": \"300000\",\n    \"notes\": [\n      {\n        \"serialNumber\": \"NOTE-0001\",\n        \"sequence\": 1,\n        \"amount\": \"100000\",\n        \"dueDate\": \"2030-01-15\",\n        \"status\": \"CANCELLED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": \"2026-10-12T09:00:00.000Z\"\n      },\n      {\n        \"serialNumber\": \"NOTE-0002\",\n        \"sequence\": 2,\n        \"amount\": \"200000\",\n        \"dueDate\": \"2030-02-15\",\n        \"status\": \"ISSUED\",\n        \"paidAt\": null,\n        \"protestedAt\": null,\n        \"cancelledAt\": null\n      }\n    ],\n    \"cancelResults\": [\n      {\n        \"serialNumber\": \"NOTE-0001\",\n        \"result\": \"CANCELLED\",\n        \"errorCode\": null\n      },\n      {\n        \"serialNumber\": \"NOTE-0002\",\n        \"result\": \"FAILED\",\n        \"errorCode\": \"payment.promissory_note.provider_unavailable\"\n      }\n    ]\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-12T09:00:00.000Z\",\n  \"requestId\": \"req_5d2e8b1c\"\n}"
             }
           ]
         }
@@ -1541,7 +1541,7 @@
             "description": "A single-use link for a set amount (an invoice or a payment request). `environment` is optional and, when sent, must equal the key's environment. `expiresAt` (ISO-8601, in the future) is optional; without it the link does not expire.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usage\": \"SINGLE_USE\",\n  \"amountMode\": \"FIXED\",\n  \"currency\": \"{{currency}}\",\n  \"amountMinor\": {{amount_minor}},\n  \"title\": \"Consulting fee\",\n  \"description\": \"Postman test link\",\n  \"taxNote\": \"VAT included\",\n  \"reference\": \"pm-{{$timestamp}}\",\n  \"buyerFields\": {\n    \"name\": \"REQUIRED\",\n    \"email\": \"REQUIRED\",\n    \"phone\": \"OPTIONAL\",\n    \"address\": \"HIDDEN\",\n    \"identityNumber\": \"HIDDEN\"\n  },\n  \"metadata\": {\n    \"source\": \"postman\"\n  }\n}",
+              "raw": "{\n  \"usage\": \"SINGLE_USE\",\n  \"amountMode\": \"FIXED\",\n  \"currency\": \"{{currency}}\",\n  \"amountMinor\": \"{{amount_minor}}\",\n  \"title\": \"Consulting fee\",\n  \"description\": \"Postman test link\",\n  \"taxNote\": \"VAT included\",\n  \"reference\": \"pm-{{$timestamp}}\",\n  \"buyerFields\": {\n    \"name\": \"REQUIRED\",\n    \"email\": \"REQUIRED\",\n    \"phone\": \"OPTIONAL\",\n    \"address\": \"HIDDEN\",\n    \"identityNumber\": \"HIDDEN\"\n  },\n  \"metadata\": {\n    \"source\": \"postman\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1581,7 +1581,7 @@
             "description": "A multi-use link where the buyer picks quantities. `itemKey` is the line's permanent identity (stock is counted on it) and cannot change later. `capacity` caps the units sold across all payments.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usage\": \"MULTI_USE\",\n  \"amountMode\": \"ITEMIZED\",\n  \"currency\": \"{{currency}}\",\n  \"title\": \"Year-end concert\",\n  \"items\": [\n    { \"itemKey\": \"standard\", \"name\": \"Standard ticket\", \"unitPriceMinor\": 45000, \"minQuantity\": 0, \"maxQuantity\": 6, \"capacity\": 400 },\n    { \"itemKey\": \"balcony\", \"name\": \"Balcony ticket\", \"unitPriceMinor\": 30000, \"minQuantity\": 0, \"maxQuantity\": 6, \"capacity\": 150 }\n  ],\n  \"buttonLabelKey\": \"BUY\",\n  \"requireTermsAcceptance\": false,\n  \"customFields\": [\n    { \"key\": \"seat_note\", \"label\": \"Seat preference\", \"fieldType\": \"TEXT\", \"required\": false, \"maxLength\": 60 }\n  ],\n  \"tags\": [\"postman\"]\n}",
+              "raw": "{\n  \"usage\": \"MULTI_USE\",\n  \"amountMode\": \"ITEMIZED\",\n  \"currency\": \"{{currency}}\",\n  \"title\": \"Year-end concert\",\n  \"items\": [\n    { \"itemKey\": \"standard\", \"name\": \"Standard ticket\", \"unitPriceMinor\": \"45000\", \"minQuantity\": 0, \"maxQuantity\": 6, \"capacity\": 400 },\n    { \"itemKey\": \"balcony\", \"name\": \"Balcony ticket\", \"unitPriceMinor\": \"30000\", \"minQuantity\": 0, \"maxQuantity\": 6, \"capacity\": 150 }\n  ],\n  \"buttonLabelKey\": \"BUY\",\n  \"requireTermsAcceptance\": false,\n  \"customFields\": [\n    { \"key\": \"seat_note\", \"label\": \"Seat preference\", \"fieldType\": \"TEXT\", \"required\": false, \"maxLength\": 60 }\n  ],\n  \"tags\": [\"postman\"]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1945,7 +1945,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amount\": {{amount_minor}},\n  \"currency\": \"{{currency}}\",\n  \"binOrPan\": \"540000\"\n}"
+              "raw": "{\n  \"amount\": \"{{amount_minor}}\",\n  \"currency\": \"{{currency}}\",\n  \"binOrPan\": \"540000\"\n}"
             },
             "url": "{{base_url}}/api/v1/bin/installments"
           }
@@ -4500,7 +4500,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"currency\": \"TRY\",\n        \"balanceMinor\": 1250050,\n        \"availableMinor\": 1200050,\n        \"blockedMinor\": 50000,\n        \"asOf\": \"2026-10-01T08:55:00.000Z\",\n        \"availableWithoutOverdraftMinor\": 1200050,\n        \"overdraftAvailableMinor\": 0\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"currency\": \"TRY\",\n        \"balanceMinor\": \"1250050\",\n        \"availableMinor\": \"1200050\",\n        \"blockedMinor\": \"50000\",\n        \"asOf\": \"2026-10-01T08:55:00.000Z\",\n        \"availableWithoutOverdraftMinor\": \"1200050\",\n        \"overdraftAvailableMinor\": \"0\"\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             }
           ]
         },
@@ -4542,7 +4542,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"transactionId\": \"4f3b6d8c-5a7e-4c9d-9ebf-6a8b0c2d4e5f\",\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"direction\": \"CREDIT\",\n        \"amountMinor\": 150000,\n        \"currency\": \"TRY\",\n        \"bookedAt\": \"2026-09-30T14:12:00.000Z\",\n        \"valueAt\": \"2026-09-30T14:12:00.000Z\",\n        \"canonicalType\": \"TRANSFER_IN\",\n        \"description\": \"LNX-ORNEK-0001 SIPARIS ODEMESI\",\n        \"counterpartyNameMasked\": \"Ö**** A****\",\n        \"counterpartyIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n        \"counterpartyBankCode\": \"0000\",\n        \"counterpartyBankName\": \"ÖRNEK BANKA A.Ş.\",\n        \"receiptNo\": \"R-000001\",\n        \"receivedAt\": \"2026-09-30T14:17:03.000Z\"\n      },\n      {\n        \"transactionId\": \"5a4c7e9d-6b8f-4dae-8fca-7b9c1d3e5f6a\",\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"direction\": \"CREDIT\",\n        \"amountMinor\": 42050,\n        \"currency\": \"TRY\",\n        \"bookedAt\": \"2026-09-29T09:40:00.000Z\",\n        \"canonicalType\": \"TRANSFER_IN\",\n        \"description\": \"LNX-ORNEK-0002\",\n        \"counterpartyNameMasked\": \"M**** Y****\",\n        \"counterpartyIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n        \"counterpartyBankCode\": \"0000\",\n        \"counterpartyBankName\": \"ÖRNEK BANKA A.Ş.\",\n        \"receivedAt\": \"2026-09-29T09:45:11.000Z\"\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": true,\n    \"nextCursor\": \"eyJ2IjoxLCJ0IjoiMjAyNi0wOS0yOVQwOTo0NToxMS4wMDAwMDBaIiwiaWQiOiI1YTRjN2U5ZCJ9\",\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"transactionId\": \"4f3b6d8c-5a7e-4c9d-9ebf-6a8b0c2d4e5f\",\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"direction\": \"CREDIT\",\n        \"amountMinor\": \"150000\",\n        \"currency\": \"TRY\",\n        \"bookedAt\": \"2026-09-30T14:12:00.000Z\",\n        \"valueAt\": \"2026-09-30T14:12:00.000Z\",\n        \"canonicalType\": \"TRANSFER_IN\",\n        \"description\": \"LNX-ORNEK-0001 SIPARIS ODEMESI\",\n        \"counterpartyNameMasked\": \"Ö**** A****\",\n        \"counterpartyIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n        \"counterpartyBankCode\": \"0000\",\n        \"counterpartyBankName\": \"ÖRNEK BANKA A.Ş.\",\n        \"receiptNo\": \"R-000001\",\n        \"receivedAt\": \"2026-09-30T14:17:03.000Z\"\n      },\n      {\n        \"transactionId\": \"5a4c7e9d-6b8f-4dae-8fca-7b9c1d3e5f6a\",\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"direction\": \"CREDIT\",\n        \"amountMinor\": \"42050\",\n        \"currency\": \"TRY\",\n        \"bookedAt\": \"2026-09-29T09:40:00.000Z\",\n        \"canonicalType\": \"TRANSFER_IN\",\n        \"description\": \"LNX-ORNEK-0002\",\n        \"counterpartyNameMasked\": \"M**** Y****\",\n        \"counterpartyIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n        \"counterpartyBankCode\": \"0000\",\n        \"counterpartyBankName\": \"ÖRNEK BANKA A.Ş.\",\n        \"receivedAt\": \"2026-09-29T09:45:11.000Z\"\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": true,\n    \"nextCursor\": \"eyJ2IjoxLCJ0IjoiMjAyNi0wOS0yOVQwOTo0NToxMS4wMDAwMDBaIiwiaWQiOiI1YTRjN2U5ZCJ9\",\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             },
             {
               "name": "Window over 92 days",
@@ -4602,7 +4602,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"transactionId\": \"4f3b6d8c-5a7e-4c9d-9ebf-6a8b0c2d4e5f\",\n    \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"direction\": \"CREDIT\",\n    \"amountMinor\": 150000,\n    \"currency\": \"TRY\",\n    \"bookedAt\": \"2026-09-30T14:12:00.000Z\",\n    \"valueAt\": \"2026-09-30T14:12:00.000Z\",\n    \"canonicalType\": \"TRANSFER_IN\",\n    \"description\": \"LNX-ORNEK-0001 SIPARIS ODEMESI\",\n    \"counterpartyNameMasked\": \"Ö**** A****\",\n    \"counterpartyIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n    \"counterpartyBankCode\": \"0000\",\n    \"counterpartyBankName\": \"ÖRNEK BANKA A.Ş.\",\n    \"receiptNo\": \"R-000001\",\n    \"receivedAt\": \"2026-09-30T14:17:03.000Z\",\n    \"balanceAfterMinor\": 1250050,\n    \"documentNo\": \"D-000001\",\n    \"bank\": {\n      \"bankId\": \"0b9d2f4e-1c3a-4e5f-9a7b-2c4d6e8f0a1b\",\n      \"eftCode\": \"0000\",\n      \"name\": \"ÖRNEK BANKA A.Ş.\"\n    }\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"transactionId\": \"4f3b6d8c-5a7e-4c9d-9ebf-6a8b0c2d4e5f\",\n    \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"direction\": \"CREDIT\",\n    \"amountMinor\": \"150000\",\n    \"currency\": \"TRY\",\n    \"bookedAt\": \"2026-09-30T14:12:00.000Z\",\n    \"valueAt\": \"2026-09-30T14:12:00.000Z\",\n    \"canonicalType\": \"TRANSFER_IN\",\n    \"description\": \"LNX-ORNEK-0001 SIPARIS ODEMESI\",\n    \"counterpartyNameMasked\": \"Ö**** A****\",\n    \"counterpartyIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n    \"counterpartyBankCode\": \"0000\",\n    \"counterpartyBankName\": \"ÖRNEK BANKA A.Ş.\",\n    \"receiptNo\": \"R-000001\",\n    \"receivedAt\": \"2026-09-30T14:17:03.000Z\",\n    \"balanceAfterMinor\": \"1250050\",\n    \"documentNo\": \"D-000001\",\n    \"bank\": {\n      \"bankId\": \"0b9d2f4e-1c3a-4e5f-9a7b-2c4d6e8f0a1b\",\n      \"eftCode\": \"0000\",\n      \"name\": \"ÖRNEK BANKA A.Ş.\"\n    }\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             }
           ]
         },
@@ -4708,10 +4708,10 @@
               "    }",
               "  }",
               "  if (insuranceCall === 'POST /orders' && typeof insurancePayload.orderId === 'string') {",
-              "    const ticketPrice = Number(pm.environment.get('insurance_ticket_price_minor'));",
+              "    const ticketText = pm.environment.get('insurance_ticket_price_minor');\n    if (typeof ticketText !== 'string' || ticketText !== ticketText.trim() || !/^[1-9][0-9]*$/.test(ticketText) || typeof insurancePayload.premiumAmount !== 'string' || insurancePayload.premiumAmount !== insurancePayload.premiumAmount.trim() || !/^[1-9][0-9]*$/.test(insurancePayload.premiumAmount)) throw new Error('Canonical money strings are required.');\n    const ticketPrice = BigInt(ticketText);",
               "    pm.environment.set('insurance_order_id', insurancePayload.orderId);",
               "    pm.environment.set('insurance_premium_amount', String(insurancePayload.premiumAmount));",
-              "    pm.environment.set('insurance_payment_amount', String(ticketPrice + insurancePayload.premiumAmount));",
+              "    pm.environment.set('insurance_payment_amount', (ticketPrice + BigInt(insurancePayload.premiumAmount)).toString());",
               "  }",
               "  if (/^[A-Z]+ \\/orders\\/[^/]+/.test(insuranceCall) && Array.isArray(insurancePayload.policies)) {",
               "    const issuedPolicy = insurancePayload.policies.find(function (policy) {",
@@ -4762,7 +4762,7 @@
                 "description": "Which insurance can be offered for the items a payment will carry, before the payment exists. `context.items` (1–100) are basket items in the payment format with the insurance fields; with any insurance field the item `id`s must be unique. `insuranceCategory` is one of `TICKET`, `HOTEL`, `EVENT`, `DEVICE`, `ELECTRONICS`, `VEHICLE`, `TRAVEL`, `HOME`, `HEALTH`, `PET`, `MICROMOBILITY`, `MUSICAL_INSTRUMENT`, `SHIPMENT`, `EDUCATION`; `insuranceContext` takes that category's keys only (no personal data, no amounts). Answers `200` (a read, nothing is created) with `data.products[]`: `insuranceType`, `basketItemIds`, `title` and `description` (language → text) and `fields[]`, the fields the quote needs for every insurance company open to you (a field required by only some of them carries `requiredBy[{underwriterCode, stage}]`; `requiredAt` is the stage, `QUOTE` or `POLICY`). An empty list means insurance is not offered (no insurance field, turned off for your account or no active insurer connection); it is not an error, continue the checkout without insurance. Each product also says what the items already fill in: `prefill` (from `insuranceContext`, plain, in the quote body shape), `providedFields` (`[{path, masked}]`, from `insuranceData`; a personal value is never returned in clear), `quoteReady` (the quote needs nothing more for at least one insurance company) and `insuranceDataIssues` (`[{basketItemId, field, reason}]`, data that could not be used). `context.items[].insuranceData` is used for this call only and is not stored.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"currency\": \"{{currency}}\",\n  \"insuranceType\": \"{{insurance_type}}\",\n  \"context\": {\n    \"items\": [\n      {\n        \"id\": \"{{insurance_ticket_item_id}}\",\n        \"price\": {{insurance_ticket_price_minor}},\n        \"name\": \"Izmir-Ankara train ticket\",\n        \"category1\": \"ticket\",\n        \"itemType\": \"VIRTUAL\",\n        \"insuranceCategory\": \"TICKET\",\n        \"insuranceTypes\": [\n          \"{{insurance_type}}\"\n        ],\n        \"insuranceContext\": {\n          \"transportMode\": \"TRAIN\",\n          \"carrier\": \"Example Rail\",\n          \"departureAt\": \"{{insurance_departure_at}}\",\n          \"originCity\": \"Izmir\",\n          \"destinationCity\": \"Ankara\"\n        }\n      }\n    ]\n  }\n}",
+                  "raw": "{\n  \"currency\": \"{{currency}}\",\n  \"insuranceType\": \"{{insurance_type}}\",\n  \"context\": {\n    \"items\": [\n      {\n        \"id\": \"{{insurance_ticket_item_id}}\",\n        \"price\": \"{{insurance_ticket_price_minor}}\",\n        \"name\": \"Izmir-Ankara train ticket\",\n        \"category1\": \"ticket\",\n        \"itemType\": \"VIRTUAL\",\n        \"insuranceCategory\": \"TICKET\",\n        \"insuranceTypes\": [\n          \"{{insurance_type}}\"\n        ],\n        \"insuranceContext\": {\n          \"transportMode\": \"TRAIN\",\n          \"carrier\": \"Example Rail\",\n          \"departureAt\": \"{{insurance_departure_at}}\",\n          \"originCity\": \"Izmir\",\n          \"destinationCity\": \"Ankara\"\n        }\n      }\n    ]\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -4927,7 +4927,7 @@
                 "description": "A price for the ticket, before the payment exists (`context.items`: the items the payment will carry, same `id`, `price` and insurance fields). `insured[]` and `tickets[]` are the `TICKET_CANCELLATION` fields; the policy-stage fields (`pnr`, `ticketNumber`, the insured's `email` and `phone`) are sent here too, there is no later call for them. `paymentIntentId` instead of `context.items` prices the basket of a payment that already exists; both together is `422`. Neither is for insurance sold without a basket item (`List Insurance Products Sold Without a Basket Item`).\n\nAnswers `201` with `data.options[]`: each option has its own `quoteId`, `premiumAmount` (minor units), `premiumCollectedBy`, `terms` and `expiresAt`, and names the insurance company in `underwriter` (`code`, `name`, `logoUrl`, `disclosureText`) apart from the `provider` that brokers it; the same company from two providers comes as two options with the same `underwriter.code`. `data.excludedOptions[]` lists the companies the request could not be priced with (`underwriter`, `provider`, `errorCode`, `errors[{field, reason}]`, field paths only); complete those fields and quote again for them, the other options are not affected. The folder stores the first `QUOTED` option whose premium you collect (`premiumCollectedBy: MERCHANT`) in `insurance_quote_id`, `insurance_terms_version` and `insurance_terms_sha256`. Field errors are `422 insurance.validation.invalid` with `details.errors[{field, reason}]`.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"insuranceType\": \"{{insurance_type}}\",\n  \"currency\": \"{{currency}}\",\n  \"merchantOrderId\": \"{{insurance_merchant_order_id}}\",\n  \"context\": {\n    \"items\": [\n      {\n        \"id\": \"{{insurance_ticket_item_id}}\",\n        \"price\": {{insurance_ticket_price_minor}},\n        \"name\": \"Izmir-Ankara train ticket\",\n        \"category1\": \"ticket\",\n        \"itemType\": \"VIRTUAL\",\n        \"insuranceCategory\": \"TICKET\",\n        \"insuranceTypes\": [\n          \"{{insurance_type}}\"\n        ],\n        \"insuranceContext\": {\n          \"transportMode\": \"TRAIN\",\n          \"carrier\": \"Example Rail\",\n          \"departureAt\": \"{{insurance_departure_at}}\",\n          \"originCity\": \"Izmir\",\n          \"destinationCity\": \"Ankara\"\n        }\n      }\n    ]\n  },\n  \"insured\": [\n    {\n      \"identityType\": \"{{insurance_insured_identity_type}}\",\n      \"identityNumber\": \"{{insurance_insured_identity_number}}\",\n      \"birthDate\": \"{{insurance_insured_birth_date}}\",\n      \"email\": \"{{insurance_insured_email}}\",\n      \"phone\": \"{{insurance_insured_phone}}\"\n    }\n  ],\n  \"tickets\": [\n    {\n      \"basketItemId\": \"{{insurance_ticket_item_id}}\",\n      \"transportMode\": \"TRAIN\",\n      \"carrier\": \"Example Rail\",\n      \"priceAmount\": {{insurance_ticket_price_minor}},\n      \"departureAt\": \"{{insurance_departure_at}}\",\n      \"originCity\": \"Izmir\",\n      \"destinationCity\": \"Ankara\",\n      \"pnr\": \"{{insurance_ticket_pnr}}\",\n      \"ticketNumber\": \"{{insurance_ticket_number}}\"\n    }\n  ]\n}",
+                  "raw": "{\n  \"insuranceType\": \"{{insurance_type}}\",\n  \"currency\": \"{{currency}}\",\n  \"merchantOrderId\": \"{{insurance_merchant_order_id}}\",\n  \"context\": {\n    \"items\": [\n      {\n        \"id\": \"{{insurance_ticket_item_id}}\",\n        \"price\": \"{{insurance_ticket_price_minor}}\",\n        \"name\": \"Izmir-Ankara train ticket\",\n        \"category1\": \"ticket\",\n        \"itemType\": \"VIRTUAL\",\n        \"insuranceCategory\": \"TICKET\",\n        \"insuranceTypes\": [\n          \"{{insurance_type}}\"\n        ],\n        \"insuranceContext\": {\n          \"transportMode\": \"TRAIN\",\n          \"carrier\": \"Example Rail\",\n          \"departureAt\": \"{{insurance_departure_at}}\",\n          \"originCity\": \"Izmir\",\n          \"destinationCity\": \"Ankara\"\n        }\n      }\n    ]\n  },\n  \"insured\": [\n    {\n      \"identityType\": \"{{insurance_insured_identity_type}}\",\n      \"identityNumber\": \"{{insurance_insured_identity_number}}\",\n      \"birthDate\": \"{{insurance_insured_birth_date}}\",\n      \"email\": \"{{insurance_insured_email}}\",\n      \"phone\": \"{{insurance_insured_phone}}\"\n    }\n  ],\n  \"tickets\": [\n    {\n      \"basketItemId\": \"{{insurance_ticket_item_id}}\",\n      \"transportMode\": \"TRAIN\",\n      \"carrier\": \"Example Rail\",\n      \"priceAmount\": \"{{insurance_ticket_price_minor}}\",\n      \"departureAt\": \"{{insurance_departure_at}}\",\n      \"originCity\": \"Izmir\",\n      \"destinationCity\": \"Ankara\",\n      \"pnr\": \"{{insurance_ticket_pnr}}\",\n      \"ticketNumber\": \"{{insurance_ticket_number}}\"\n    }\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5029,7 +5029,7 @@
                 "description": "The payment that collects the premium: the ticket exactly as quoted (same `id`, `price` and insurance fields) plus the premium item: `id` = `insurance_order_id`, `itemType: VIRTUAL`, `price` = `insurance_premium_amount`, no insurance field. `amount` is the basket total (`insurance_payment_amount`, set by `Create Insurance Order`). The collection stores `paymentId` in `payment_id` and the Checkout Form token in `checkout_token`.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"amount\": {{insurance_payment_amount}},\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}-ins\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout with an insured ticket and its insurance premium\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"{{insurance_ticket_item_id}}\",\n      \"price\": {{insurance_ticket_price_minor}},\n      \"name\": \"Izmir-Ankara train ticket\",\n      \"category1\": \"ticket\",\n      \"itemType\": \"VIRTUAL\",\n      \"insuranceCategory\": \"TICKET\",\n      \"insuranceTypes\": [\n        \"{{insurance_type}}\"\n      ],\n      \"insuranceContext\": {\n        \"transportMode\": \"TRAIN\",\n        \"carrier\": \"Example Rail\",\n        \"departureAt\": \"{{insurance_departure_at}}\",\n        \"originCity\": \"Izmir\",\n        \"destinationCity\": \"Ankara\"\n      }\n    },\n    {\n      \"id\": \"{{insurance_order_id}}\",\n      \"price\": {{insurance_premium_amount}},\n      \"name\": \"Ticket cancellation insurance\",\n      \"category1\": \"insurance\",\n      \"itemType\": \"VIRTUAL\"\n    }\n  ]\n}",
+                  "raw": "{\n  \"amount\": \"{{insurance_payment_amount}}\",\n  \"currency\": \"{{currency}}\",\n  \"orderId\": \"{{order_id}}-ins\",\n  \"callbackUrl\": \"{{callback_url}}\",\n  \"description\": \"Postman checkout with an insured ticket and its insurance premium\",\n  \"metadata\": {\n    \"allowedOrigin\": \"http://localhost:8080\",\n    \"checkoutOrigin\": \"http://localhost:8080\"\n  },\n  \"buyer\": {\n    \"name\": \"Ada\",\n    \"surname\": \"Yilmaz\",\n    \"identityNumber\": \"11111111111\",\n    \"email\": \"ada@example.com\",\n    \"gsmNumber\": \"+905350000000\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\",\n    \"zipCode\": \"34000\",\n    \"ip\": \"127.0.0.1\"\n  },\n  \"billingAddress\": {\n    \"address\": \"Example Street 1\",\n    \"zipCode\": \"34000\",\n    \"contactName\": \"Ada Yilmaz\",\n    \"city\": \"Istanbul\",\n    \"country\": \"Turkey\"\n  },\n  \"basketItems\": [\n    {\n      \"id\": \"{{insurance_ticket_item_id}}\",\n      \"price\": \"{{insurance_ticket_price_minor}}\",\n      \"name\": \"Izmir-Ankara train ticket\",\n      \"category1\": \"ticket\",\n      \"itemType\": \"VIRTUAL\",\n      \"insuranceCategory\": \"TICKET\",\n      \"insuranceTypes\": [\n        \"{{insurance_type}}\"\n      ],\n      \"insuranceContext\": {\n        \"transportMode\": \"TRAIN\",\n        \"carrier\": \"Example Rail\",\n        \"departureAt\": \"{{insurance_departure_at}}\",\n        \"originCity\": \"Izmir\",\n        \"destinationCity\": \"Ankara\"\n      }\n    },\n    {\n      \"id\": \"{{insurance_order_id}}\",\n      \"price\": \"{{insurance_premium_amount}}\",\n      \"name\": \"Ticket cancellation insurance\",\n      \"category1\": \"insurance\",\n      \"itemType\": \"VIRTUAL\"\n    }\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5226,7 +5226,7 @@
                 "description": "A price for the ticket, before the payment exists (`context.items`: the items the payment will carry, same `id`, `price` and insurance fields). `insured[]` and `tickets[]` are the `TICKET_CANCELLATION` fields; the policy-stage fields (`pnr`, `ticketNumber`, the insured's `email` and `phone`) are sent here too, there is no later call for them. `paymentIntentId` instead of `context.items` prices the basket of a payment that already exists; both together is `422`. Neither is for insurance sold without a basket item (`List Insurance Products Sold Without a Basket Item`).\n\nAnswers `201` with `data.options[]`: each option has its own `quoteId`, `premiumAmount` (minor units), `premiumCollectedBy`, `terms` and `expiresAt`, and names the insurance company in `underwriter` (`code`, `name`, `logoUrl`, `disclosureText`) apart from the `provider` that brokers it; the same company from two providers comes as two options with the same `underwriter.code`. `data.excludedOptions[]` lists the companies the request could not be priced with (`underwriter`, `provider`, `errorCode`, `errors[{field, reason}]`, field paths only); complete those fields and quote again for them, the other options are not affected. The folder stores the first `QUOTED` option whose premium you collect (`premiumCollectedBy: MERCHANT`) in `insurance_quote_id`, `insurance_terms_version` and `insurance_terms_sha256`. Field errors are `422 insurance.validation.invalid` with `details.errors[{field, reason}]`.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"insuranceType\": \"{{insurance_type}}\",\n  \"currency\": \"{{currency}}\",\n  \"merchantOrderId\": \"{{insurance_merchant_order_id}}\",\n  \"context\": {\n    \"items\": [\n      {\n        \"id\": \"{{insurance_ticket_item_id}}\",\n        \"price\": {{insurance_ticket_price_minor}},\n        \"name\": \"Izmir-Ankara train ticket\",\n        \"category1\": \"ticket\",\n        \"itemType\": \"VIRTUAL\",\n        \"insuranceCategory\": \"TICKET\",\n        \"insuranceTypes\": [\n          \"{{insurance_type}}\"\n        ],\n        \"insuranceContext\": {\n          \"transportMode\": \"TRAIN\",\n          \"carrier\": \"Example Rail\",\n          \"departureAt\": \"{{insurance_departure_at}}\",\n          \"originCity\": \"Izmir\",\n          \"destinationCity\": \"Ankara\"\n        }\n      }\n    ]\n  },\n  \"insured\": [\n    {\n      \"identityType\": \"{{insurance_insured_identity_type}}\",\n      \"identityNumber\": \"{{insurance_insured_identity_number}}\",\n      \"birthDate\": \"{{insurance_insured_birth_date}}\",\n      \"email\": \"{{insurance_insured_email}}\",\n      \"phone\": \"{{insurance_insured_phone}}\"\n    }\n  ],\n  \"tickets\": [\n    {\n      \"basketItemId\": \"{{insurance_ticket_item_id}}\",\n      \"transportMode\": \"TRAIN\",\n      \"carrier\": \"Example Rail\",\n      \"priceAmount\": {{insurance_ticket_price_minor}},\n      \"departureAt\": \"{{insurance_departure_at}}\",\n      \"originCity\": \"Izmir\",\n      \"destinationCity\": \"Ankara\",\n      \"pnr\": \"{{insurance_ticket_pnr}}\",\n      \"ticketNumber\": \"{{insurance_ticket_number}}\"\n    }\n  ]\n}",
+                  "raw": "{\n  \"insuranceType\": \"{{insurance_type}}\",\n  \"currency\": \"{{currency}}\",\n  \"merchantOrderId\": \"{{insurance_merchant_order_id}}\",\n  \"context\": {\n    \"items\": [\n      {\n        \"id\": \"{{insurance_ticket_item_id}}\",\n        \"price\": \"{{insurance_ticket_price_minor}}\",\n        \"name\": \"Izmir-Ankara train ticket\",\n        \"category1\": \"ticket\",\n        \"itemType\": \"VIRTUAL\",\n        \"insuranceCategory\": \"TICKET\",\n        \"insuranceTypes\": [\n          \"{{insurance_type}}\"\n        ],\n        \"insuranceContext\": {\n          \"transportMode\": \"TRAIN\",\n          \"carrier\": \"Example Rail\",\n          \"departureAt\": \"{{insurance_departure_at}}\",\n          \"originCity\": \"Izmir\",\n          \"destinationCity\": \"Ankara\"\n        }\n      }\n    ]\n  },\n  \"insured\": [\n    {\n      \"identityType\": \"{{insurance_insured_identity_type}}\",\n      \"identityNumber\": \"{{insurance_insured_identity_number}}\",\n      \"birthDate\": \"{{insurance_insured_birth_date}}\",\n      \"email\": \"{{insurance_insured_email}}\",\n      \"phone\": \"{{insurance_insured_phone}}\"\n    }\n  ],\n  \"tickets\": [\n    {\n      \"basketItemId\": \"{{insurance_ticket_item_id}}\",\n      \"transportMode\": \"TRAIN\",\n      \"carrier\": \"Example Rail\",\n      \"priceAmount\": \"{{insurance_ticket_price_minor}}\",\n      \"departureAt\": \"{{insurance_departure_at}}\",\n      \"originCity\": \"Izmir\",\n      \"destinationCity\": \"Ankara\",\n      \"pnr\": \"{{insurance_ticket_pnr}}\",\n      \"ticketNumber\": \"{{insurance_ticket_number}}\"\n    }\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5306,7 +5306,7 @@
                 "description": "Tells Lunixi you collected the premium yourself. `payment.externalPaymentId` is your payment id (1–128 printable ASCII; here derived from the order so a resend is the same payment), `paidAmount` / `paidCurrency` must equal the order's premium (`422` `premium_amount_mismatch` / `premium_currency_mismatch`), `paidAt` has a time zone and is not in the future; `paymentProvider` (up to 64 characters, for your records) is optional. The order becomes `paymentMode: EXTERNAL_PAYMENT`, `collectionStatus: COLLECTED`. The same `externalPaymentId` again returns the order; another one is `409` (`external_payment`), an order bound to a Lunixi payment `409` (`lunixi_payment`). **Idempotency-Key** is required.",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"payment\": {\n    \"externalPaymentId\": \"pay-{{insurance_order_id}}\",\n    \"paidAmount\": {{insurance_premium_amount}},\n    \"paidCurrency\": \"{{currency}}\",\n    \"paidAt\": \"{{$isoTimestamp}}\"\n  }\n}",
+                  "raw": "{\n  \"payment\": {\n    \"externalPaymentId\": \"pay-{{insurance_order_id}}\",\n    \"paidAmount\": \"{{insurance_premium_amount}}\",\n    \"paidCurrency\": \"{{currency}}\",\n    \"paidAt\": \"{{$isoTimestamp}}\"\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5765,7 +5765,7 @@
             "description": "Creates an outgoing transfer from `bank_account_id` and queues it for the bank. With an API key there is no e-mail code: the transfer is `SUBMITTED` at once (`stepUp` is `null`). The bank chooses the rail (`INTERNAL`, `INTRABANK`, `FAST`, `EFT`); Lunixi does not check the balance. Follow the transfer with `Get Transfer` or the `bank_transfer.*` webhooks.\n\nBody: `accountId`, `receiverIban` (TR IBAN, mod-97), `receiverName` (2–140), `amountMinor` (integer minor units, `150075` = 1,500.75 TRY), optional `currency` (`TRY`), `paymentPurpose`, `description` (≤ 140). Any other field (`environment`, `merchantId` …) is `400 VALIDATION_ERROR`.\n\nFill `bank_receiver_iban` and `bank_receiver_name` first. Stores `data.transfer.id` in `bank_transfer_id`.\n\n**Idempotency-Key:** required, 8–200 printable ASCII (a fresh one per send; pin it to replay). Same key + same body → the existing transfer with `replayed: true`; same key + another body → `409 bank_connect.transfer.idempotency_conflict`.\n\n- `403 bank_connect.auth.ip_allowlist_required` / `bank_connect.auth.ip_not_allowed`: add an IP allowlist to the key / call from a listed IP.\n- `429 RATE_LIMITED`: at most 20 transfer writes per minute per API key (shared with the exchange quote and order calls).\n\n**Scope:** `bank-connect:transfer` (the key needs an IP allowlist).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accountId\": \"{{bank_account_id}}\",\n  \"receiverIban\": \"{{bank_receiver_iban}}\",\n  \"receiverName\": \"{{bank_receiver_name}}\",\n  \"amountMinor\": 150075,\n  \"currency\": \"TRY\",\n  \"description\": \"Invoice 2026-0042\"\n}",
+              "raw": "{\n  \"accountId\": \"{{bank_account_id}}\",\n  \"receiverIban\": \"{{bank_receiver_iban}}\",\n  \"receiverName\": \"{{bank_receiver_name}}\",\n  \"amountMinor\": \"150075\",\n  \"currency\": \"TRY\",\n  \"description\": \"Invoice 2026-0042\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5791,7 +5791,7 @@
                 "url": "{{base_url}}/api/v1/bank-connect/transfers",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"accountId\": \"{{bank_account_id}}\",\n  \"receiverIban\": \"{{bank_receiver_iban}}\",\n  \"receiverName\": \"{{bank_receiver_name}}\",\n  \"amountMinor\": 150075,\n  \"currency\": \"TRY\",\n  \"description\": \"Invoice 2026-0042\"\n}",
+                  "raw": "{\n  \"accountId\": \"{{bank_account_id}}\",\n  \"receiverIban\": \"{{bank_receiver_iban}}\",\n  \"receiverName\": \"{{bank_receiver_name}}\",\n  \"amountMinor\": \"150075\",\n  \"currency\": \"TRY\",\n  \"description\": \"Invoice 2026-0042\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5808,7 +5808,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"transfer\": {\n      \"id\": \"5a4c7e9d-6b8f-4dae-8fc0-7b9c1d3e5f60\",\n      \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n      \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n      \"environment\": \"test\",\n      \"status\": \"SUBMITTED\",\n      \"rail\": null,\n      \"amountMinor\": 150075,\n      \"currency\": \"TRY\",\n      \"sourceIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n      \"receiverIbanMasked\": \"TR00 **** **** **** **** **01 46\",\n      \"receiverNameMasked\": \"Ö**** T******* A.Ş.\",\n      \"receiverBankCode\": \"0000\",\n      \"paymentPurpose\": null,\n      \"description\": \"Invoice 2026-0042\",\n      \"idempotencyKey\": \"bank-transfer-0b6f7c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e\",\n      \"failureCode\": null,\n      \"outcomeUnknown\": false,\n      \"initiatedVia\": \"API\",\n      \"sanctionStatus\": \"NOT_SCREENED\",\n      \"bankTransactionId\": null,\n      \"bankState\": null,\n      \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n      \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n      \"completedAt\": null,\n      \"failedAt\": null,\n      \"returnedAt\": null,\n      \"canceledAt\": null,\n      \"otpExpiresAt\": null\n    },\n    \"stepUp\": null,\n    \"replayed\": false\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"transfer\": {\n      \"id\": \"5a4c7e9d-6b8f-4dae-8fc0-7b9c1d3e5f60\",\n      \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n      \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n      \"environment\": \"test\",\n      \"status\": \"SUBMITTED\",\n      \"rail\": null,\n      \"amountMinor\": \"150075\",\n      \"currency\": \"TRY\",\n      \"sourceIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n      \"receiverIbanMasked\": \"TR00 **** **** **** **** **01 46\",\n      \"receiverNameMasked\": \"Ö**** T******* A.Ş.\",\n      \"receiverBankCode\": \"0000\",\n      \"paymentPurpose\": null,\n      \"description\": \"Invoice 2026-0042\",\n      \"idempotencyKey\": \"bank-transfer-0b6f7c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e\",\n      \"failureCode\": null,\n      \"outcomeUnknown\": false,\n      \"initiatedVia\": \"API\",\n      \"sanctionStatus\": \"NOT_SCREENED\",\n      \"bankTransactionId\": null,\n      \"bankState\": null,\n      \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n      \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n      \"completedAt\": null,\n      \"failedAt\": null,\n      \"returnedAt\": null,\n      \"canceledAt\": null,\n      \"otpExpiresAt\": null\n    },\n    \"stepUp\": null,\n    \"replayed\": false\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             },
             {
               "name": "Key without an IP allowlist",
@@ -5827,7 +5827,7 @@
                 "url": "{{base_url}}/api/v1/bank-connect/transfers",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"accountId\": \"{{bank_account_id}}\",\n  \"receiverIban\": \"{{bank_receiver_iban}}\",\n  \"receiverName\": \"{{bank_receiver_name}}\",\n  \"amountMinor\": 150075,\n  \"currency\": \"TRY\",\n  \"description\": \"Invoice 2026-0042\"\n}",
+                  "raw": "{\n  \"accountId\": \"{{bank_account_id}}\",\n  \"receiverIban\": \"{{bank_receiver_iban}}\",\n  \"receiverName\": \"{{bank_receiver_name}}\",\n  \"amountMinor\": \"150075\",\n  \"currency\": \"TRY\",\n  \"description\": \"Invoice 2026-0042\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5886,7 +5886,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"5a4c7e9d-6b8f-4dae-8fc0-7b9c1d3e5f60\",\n        \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"environment\": \"test\",\n        \"status\": \"COMPLETED\",\n        \"rail\": \"FAST\",\n        \"amountMinor\": 150075,\n        \"currency\": \"TRY\",\n        \"sourceIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n        \"receiverIbanMasked\": \"TR00 **** **** **** **** **01 46\",\n        \"receiverNameMasked\": \"Ö**** T******* A.Ş.\",\n        \"receiverBankCode\": \"0000\",\n        \"paymentPurpose\": null,\n        \"description\": \"Invoice 2026-0042\",\n        \"idempotencyKey\": \"bank-transfer-0b6f7c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e\",\n        \"failureCode\": null,\n        \"outcomeUnknown\": false,\n        \"initiatedVia\": \"API\",\n        \"sanctionStatus\": \"NOT_SCREENED\",\n        \"bankTransactionId\": null,\n        \"bankState\": null,\n        \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n        \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n        \"completedAt\": \"2026-10-01T09:00:20.000Z\",\n        \"failedAt\": null,\n        \"returnedAt\": null,\n        \"canceledAt\": null,\n        \"otpExpiresAt\": null\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"5a4c7e9d-6b8f-4dae-8fc0-7b9c1d3e5f60\",\n        \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n        \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"environment\": \"test\",\n        \"status\": \"COMPLETED\",\n        \"rail\": \"FAST\",\n        \"amountMinor\": \"150075\",\n        \"currency\": \"TRY\",\n        \"sourceIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n        \"receiverIbanMasked\": \"TR00 **** **** **** **** **01 46\",\n        \"receiverNameMasked\": \"Ö**** T******* A.Ş.\",\n        \"receiverBankCode\": \"0000\",\n        \"paymentPurpose\": null,\n        \"description\": \"Invoice 2026-0042\",\n        \"idempotencyKey\": \"bank-transfer-0b6f7c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e\",\n        \"failureCode\": null,\n        \"outcomeUnknown\": false,\n        \"initiatedVia\": \"API\",\n        \"sanctionStatus\": \"NOT_SCREENED\",\n        \"bankTransactionId\": null,\n        \"bankState\": null,\n        \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n        \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n        \"completedAt\": \"2026-10-01T09:00:20.000Z\",\n        \"failedAt\": null,\n        \"returnedAt\": null,\n        \"canceledAt\": null,\n        \"otpExpiresAt\": null\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             }
           ]
         },
@@ -5928,7 +5928,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"5a4c7e9d-6b8f-4dae-8fc0-7b9c1d3e5f60\",\n    \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n    \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"environment\": \"test\",\n    \"status\": \"COMPLETED\",\n    \"rail\": \"FAST\",\n    \"amountMinor\": 150075,\n    \"currency\": \"TRY\",\n    \"sourceIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n    \"receiverIbanMasked\": \"TR00 **** **** **** **** **01 46\",\n    \"receiverNameMasked\": \"Ö**** T******* A.Ş.\",\n    \"receiverBankCode\": \"0000\",\n    \"paymentPurpose\": null,\n    \"description\": \"Invoice 2026-0042\",\n    \"idempotencyKey\": \"bank-transfer-0b6f7c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e\",\n    \"failureCode\": null,\n    \"outcomeUnknown\": false,\n    \"initiatedVia\": \"API\",\n    \"sanctionStatus\": \"NOT_SCREENED\",\n    \"bankTransactionId\": null,\n    \"bankState\": null,\n    \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n    \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n    \"completedAt\": \"2026-10-01T09:00:20.000Z\",\n    \"failedAt\": null,\n    \"returnedAt\": null,\n    \"canceledAt\": null,\n    \"otpExpiresAt\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"5a4c7e9d-6b8f-4dae-8fc0-7b9c1d3e5f60\",\n    \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n    \"accountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"environment\": \"test\",\n    \"status\": \"COMPLETED\",\n    \"rail\": \"FAST\",\n    \"amountMinor\": \"150075\",\n    \"currency\": \"TRY\",\n    \"sourceIbanMasked\": \"TR00 **** **** **** **** **00 00\",\n    \"receiverIbanMasked\": \"TR00 **** **** **** **** **01 46\",\n    \"receiverNameMasked\": \"Ö**** T******* A.Ş.\",\n    \"receiverBankCode\": \"0000\",\n    \"paymentPurpose\": null,\n    \"description\": \"Invoice 2026-0042\",\n    \"idempotencyKey\": \"bank-transfer-0b6f7c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e\",\n    \"failureCode\": null,\n    \"outcomeUnknown\": false,\n    \"initiatedVia\": \"API\",\n    \"sanctionStatus\": \"NOT_SCREENED\",\n    \"bankTransactionId\": null,\n    \"bankState\": null,\n    \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n    \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n    \"completedAt\": \"2026-10-01T09:00:20.000Z\",\n    \"failedAt\": null,\n    \"returnedAt\": null,\n    \"canceledAt\": null,\n    \"otpExpiresAt\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             }
           ]
         },
@@ -6001,7 +6001,7 @@
             "description": "Quotes an exchange between two active accounts of the same connection in different currencies: you sell from `sourceAccountId` and buy into `targetAccountId`. Send exactly one of `sourceAmountMinor` / `targetAmountMinor`. Nothing is booked. Use the quote with `Create FX Order` before `expiresAt` (the bank sets the validity; `validForSeconds`). Stores `data.id` in `bank_fx_quote_id`.\n\nFill `bank_fx_source_account_id` and `bank_fx_target_account_id` first.\n\n- `422 bank_connect.fx.accounts_invalid` / `bank_connect.fx.pair_unsupported` / `bank_connect.fx.quote_rejected` (`details.reasonCode`).\n\n**Scope:** `bank-connect:transfer` (the key needs an IP allowlist).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sourceAccountId\": \"{{bank_fx_source_account_id}}\",\n  \"targetAccountId\": \"{{bank_fx_target_account_id}}\",\n  \"targetAmountMinor\": 100000\n}",
+              "raw": "{\n  \"sourceAccountId\": \"{{bank_fx_source_account_id}}\",\n  \"targetAccountId\": \"{{bank_fx_target_account_id}}\",\n  \"targetAmountMinor\": \"100000\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -6023,7 +6023,7 @@
                 "url": "{{base_url}}/api/v1/bank-connect/fx/quotes",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"sourceAccountId\": \"{{bank_fx_source_account_id}}\",\n  \"targetAccountId\": \"{{bank_fx_target_account_id}}\",\n  \"targetAmountMinor\": 100000\n}",
+                  "raw": "{\n  \"sourceAccountId\": \"{{bank_fx_source_account_id}}\",\n  \"targetAccountId\": \"{{bank_fx_target_account_id}}\",\n  \"targetAmountMinor\": \"100000\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -6040,7 +6040,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n    \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n    \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n    \"sourceCurrency\": \"TRY\",\n    \"targetCurrency\": \"USD\",\n    \"sourceAmountMinor\": 3412500,\n    \"targetAmountMinor\": 100000,\n    \"requestedSide\": \"TARGET\",\n    \"appliedRate\": \"34.1250\",\n    \"taxAmountMinor\": null,\n    \"expiresAt\": \"2026-10-01T09:01:20.000Z\",\n    \"validForSeconds\": 80,\n    \"insufficientBalance\": false,\n    \"belowMinimum\": false,\n    \"createdAt\": \"2026-10-01T09:00:00.000Z\"\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n    \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n    \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n    \"sourceCurrency\": \"TRY\",\n    \"targetCurrency\": \"USD\",\n    \"sourceAmountMinor\": \"3412500\",\n    \"targetAmountMinor\": \"100000\",\n    \"requestedSide\": \"TARGET\",\n    \"appliedRate\": \"34.1250\",\n    \"taxAmountMinor\": null,\n    \"expiresAt\": \"2026-10-01T09:01:20.000Z\",\n    \"validForSeconds\": 80,\n    \"insufficientBalance\": false,\n    \"belowMinimum\": false,\n    \"createdAt\": \"2026-10-01T09:00:00.000Z\"\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             }
           ]
         },
@@ -6118,7 +6118,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"order\": {\n      \"id\": \"7c6e9abf-8dab-4fc0-81e2-9dbe3f5a7b82\",\n      \"quoteId\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n      \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n      \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n      \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n      \"sourceCurrency\": \"TRY\",\n      \"targetCurrency\": \"USD\",\n      \"sourceAmountMinor\": 3412500,\n      \"targetAmountMinor\": 100000,\n      \"appliedRate\": \"34.1250\",\n      \"description\": null,\n      \"idempotencyKey\": \"bank-fx-order-4c5d6e7f-8a9b-4c0d-9e1f-2a3b4c5d6e7f\",\n      \"status\": \"SUBMITTED\",\n      \"failureCode\": null,\n      \"outcomeUnknown\": false,\n      \"initiatedVia\": \"API\",\n      \"sourceBalanceAfterMinor\": null,\n      \"targetBalanceAfterMinor\": null,\n      \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n      \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n      \"completedAt\": null,\n      \"failedAt\": null,\n      \"fxSessionId\": null\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"order\": {\n      \"id\": \"7c6e9abf-8dab-4fc0-81e2-9dbe3f5a7b82\",\n      \"quoteId\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n      \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n      \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n      \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n      \"sourceCurrency\": \"TRY\",\n      \"targetCurrency\": \"USD\",\n      \"sourceAmountMinor\": \"3412500\",\n      \"targetAmountMinor\": \"100000\",\n      \"appliedRate\": \"34.1250\",\n      \"description\": null,\n      \"idempotencyKey\": \"bank-fx-order-4c5d6e7f-8a9b-4c0d-9e1f-2a3b4c5d6e7f\",\n      \"status\": \"SUBMITTED\",\n      \"failureCode\": null,\n      \"outcomeUnknown\": false,\n      \"initiatedVia\": \"API\",\n      \"sourceBalanceAfterMinor\": null,\n      \"targetBalanceAfterMinor\": null,\n      \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n      \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n      \"completedAt\": null,\n      \"failedAt\": null,\n      \"fxSessionId\": null\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             },
             {
               "name": "Quote expired",
@@ -6196,7 +6196,7 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"7c6e9abf-8dab-4fc0-81e2-9dbe3f5a7b82\",\n        \"quoteId\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n        \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n        \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n        \"sourceCurrency\": \"TRY\",\n        \"targetCurrency\": \"USD\",\n        \"sourceAmountMinor\": 3412500,\n        \"targetAmountMinor\": 100000,\n        \"appliedRate\": \"34.1250\",\n        \"description\": null,\n        \"idempotencyKey\": \"bank-fx-order-4c5d6e7f-8a9b-4c0d-9e1f-2a3b4c5d6e7f\",\n        \"status\": \"COMPLETED\",\n        \"failureCode\": null,\n        \"outcomeUnknown\": false,\n        \"initiatedVia\": \"API\",\n        \"sourceBalanceAfterMinor\": 1587500,\n        \"targetBalanceAfterMinor\": 250000,\n        \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n        \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n        \"completedAt\": \"2026-10-01T09:00:40.000Z\",\n        \"failedAt\": null,\n        \"fxSessionId\": null\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"7c6e9abf-8dab-4fc0-81e2-9dbe3f5a7b82\",\n        \"quoteId\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n        \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n        \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n        \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n        \"sourceCurrency\": \"TRY\",\n        \"targetCurrency\": \"USD\",\n        \"sourceAmountMinor\": \"3412500\",\n        \"targetAmountMinor\": \"100000\",\n        \"appliedRate\": \"34.1250\",\n        \"description\": null,\n        \"idempotencyKey\": \"bank-fx-order-4c5d6e7f-8a9b-4c0d-9e1f-2a3b4c5d6e7f\",\n        \"status\": \"COMPLETED\",\n        \"failureCode\": null,\n        \"outcomeUnknown\": false,\n        \"initiatedVia\": \"API\",\n        \"sourceBalanceAfterMinor\": \"1587500\",\n        \"targetBalanceAfterMinor\": \"250000\",\n        \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n        \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n        \"completedAt\": \"2026-10-01T09:00:40.000Z\",\n        \"failedAt\": null,\n        \"fxSessionId\": null\n      }\n    ]\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
             }
           ]
         },
@@ -6238,7 +6238,1115 @@
                   "value": "application/json; charset=utf-8"
                 }
               ],
-              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"7c6e9abf-8dab-4fc0-81e2-9dbe3f5a7b82\",\n    \"quoteId\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n    \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n    \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n    \"sourceCurrency\": \"TRY\",\n    \"targetCurrency\": \"USD\",\n    \"sourceAmountMinor\": 3412500,\n    \"targetAmountMinor\": 100000,\n    \"appliedRate\": \"34.1250\",\n    \"description\": null,\n    \"idempotencyKey\": \"bank-fx-order-4c5d6e7f-8a9b-4c0d-9e1f-2a3b4c5d6e7f\",\n    \"status\": \"COMPLETED\",\n    \"failureCode\": null,\n    \"outcomeUnknown\": false,\n    \"initiatedVia\": \"API\",\n    \"sourceBalanceAfterMinor\": 1587500,\n    \"targetBalanceAfterMinor\": 250000,\n    \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n    \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n    \"completedAt\": \"2026-10-01T09:00:40.000Z\",\n    \"failedAt\": null,\n    \"fxSessionId\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+              "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"7c6e9abf-8dab-4fc0-81e2-9dbe3f5a7b82\",\n    \"quoteId\": \"6b5d8fae-7c9a-4ebf-90d1-8cad2e4f6a71\",\n    \"connectionId\": \"1c0e3a5f-2d4b-4f6a-8b8c-3d5e7f9a1b2c\",\n    \"sourceAccountId\": \"2d1f4b6a-3e5c-4a7b-9c9d-4e6f8a0b2c3d\",\n    \"targetAccountId\": \"3e2a5c7b-4f6d-4b8c-8dae-5f7a9b1c3d4e\",\n    \"sourceCurrency\": \"TRY\",\n    \"targetCurrency\": \"USD\",\n    \"sourceAmountMinor\": \"3412500\",\n    \"targetAmountMinor\": \"100000\",\n    \"appliedRate\": \"34.1250\",\n    \"description\": null,\n    \"idempotencyKey\": \"bank-fx-order-4c5d6e7f-8a9b-4c0d-9e1f-2a3b4c5d6e7f\",\n    \"status\": \"COMPLETED\",\n    \"failureCode\": null,\n    \"outcomeUnknown\": false,\n    \"initiatedVia\": \"API\",\n    \"sourceBalanceAfterMinor\": \"1587500\",\n    \"targetBalanceAfterMinor\": \"250000\",\n    \"createdAt\": \"2026-10-01T09:00:00.000Z\",\n    \"submittedAt\": \"2026-10-01T09:00:00.000Z\",\n    \"completedAt\": \"2026-10-01T09:00:40.000Z\",\n    \"failedAt\": null,\n    \"fxSessionId\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-10-01T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Physical POS",
+      "description": "Physical POS payments (`/api/v1/physical-pos`, product `PHYSICAL_POS`): start a sale, pre-authorisation or unmatched refund on the POS device in your store, reverse it, cancel it before it reaches the device, and read payments, transactions, reports and end-of-day records. The card is read on the device; the API never takes card data.\n\n- **API key only.** Every route accepts the per-request Ed25519 signature only, reads included; the collection signs every gateway request. Unsigned is `401 AUTH_HEADERS_MISSING`.\n- **The key needs** the `PHYSICAL_POS` product (`403 PRODUCT_NOT_ENABLED` otherwise) and `physical_pos:payments` to start, reverse and cancel payments. Reads take `physical_pos:view` **or** `physical_pos:payments`; `List Devices` needs `physical_pos:view`. `physical_pos:manage` cannot make payments (`403 API_INSUFFICIENT_SCOPE`). `physical_pos:payments` is not added to existing keys automatically.\n- **The key decides the environment.** A TEST key (`mk_test_…`) only reads: start, reversal and cancel get `403 physical_pos.environment.test_key_read_only`, and its lists are empty. Sending `environment` is `400 physical_pos.input.environment_invalid`; `merchantId` or any other field the route does not take is `400 VALIDATION_ERROR`.\n- **Asynchronous.** Start and reversal return `202 Accepted` with `paymentStatus: NOT_STARTED` (a repeat with the same key `200`, `replayed: true`). The outcome comes with the `physical_pos.payment.*` webhooks (subscribe a `PHYSICAL_POS` endpoint to `physical_pos.*`) or `Get Payment`.\n- **Same key on retry.** `Idempotency-Key` (required on start and reversals) and `merchantReference` are built from `pos_order_ref`, `pos_payment_id`, `pos_preauth_payment_id` and `pos_refund_ref` — never from a random value. After a timeout or a `5xx`, press Send again without changing anything: the same key and body come back as `200`, `replayed: true` if the payment was opened, and no second payment is created. For a new sale change `pos_order_ref`; for a further refund on the same sale change `pos_refund_ref`. Always use the same `merchantReference` for the same sale, and do not send `allowDuplicateReference` after `409 physical_pos.payment.previous_outcome_unknown`.\n- **`UNKNOWN` means money may have been taken: never start that payment again.** `MANUAL_REVIEW` is resolved in the dashboard only.\n- **Device model support.** Partial refunds, several refunds on one sale, partial pre-authorisation closes and item refunds need the device model to support them (`422 physical_pos.payment.operation_unsupported`, `partial_amount_unsupported` / `itemized_unsupported`).\n- **Money is in minor units:** `4500` is 45.00 TRY. JSON integers in the API; strings in webhook payloads.\n- **Limit:** 120 payment writes per minute per API key (start, reversal and cancel together); `429 RATE_LIMITED` with `Retry-After`. Reads are not limited. Retry `503` errors with backoff and a limited number of attempts.\n- **Paging:** rows are `data.items`, paging is the top-level `pageInfo` (`hasMore`, `nextCursor`; `totalCount` is always `null`).\n- Starting a payment runs when a payment capability definition exists for the target device's model; otherwise `422 physical_pos.payment.operation_unsupported` (`details.reason`: `capability_undefined`) and no payment is created. Fiscal document webhook events are not produced at the moment.\n- Run `List Devices` first (fills `pos_device_id`). `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start Pre-authorisation` stores `pos_preauth_payment_id`; the reversal requests store the child in `pos_reversal_payment_id` (`Get Reversal`).\n\nError codes and what to do: https://docs.lunixi.com/physical-pos/errors",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Chains the ids the next requests use. A started payment or reversal is always stored",
+              "// (a sale in pos_payment_id, a pre-authorisation in pos_preauth_payment_id, a reversal in",
+              "// pos_reversal_payment_id); a list fills its variable only when it is empty (set one",
+              "// yourself to pin it). The Idempotency-Key and merchantReference come from pos_order_ref",
+              "// and pos_refund_ref, so a repeated Send repeats the same request.",
+              "let posEnvelope = {};",
+              "try { posEnvelope = pm.response.json(); } catch (e) { posEnvelope = {}; }",
+              "const posPayload = posEnvelope && typeof posEnvelope.data === 'object' && posEnvelope.data !== null",
+              "  ? posEnvelope.data",
+              "  : {};",
+              "const posRoute = pm.request.url.toString().split('?')[0];",
+              "const posWritten = pm.response.code >= 200 && pm.response.code < 300 && pm.request.method === 'POST';",
+              "const posPayment = posPayload.payment && typeof posPayload.payment.paymentId === 'string' ? posPayload.payment : null;",
+              "if (posWritten && posPayment && /\\/api\\/v1\\/physical-pos\\/payments$/.test(posRoute)) {",
+              "  if (posPayment.operation === 'SALE') pm.environment.set('pos_payment_id', posPayment.paymentId);",
+              "  if (posPayment.operation === 'PREAUTH_OPEN') pm.environment.set('pos_preauth_payment_id', posPayment.paymentId);",
+              "}",
+              "if (posWritten && posPayment && /\\/api\\/v1\\/physical-pos\\/payments\\/[^/]+\\/reversals$/.test(posRoute)) {",
+              "  pm.environment.set('pos_reversal_payment_id', posPayment.paymentId);",
+              "}",
+              "const posFirstRow = Array.isArray(posPayload.items) && posPayload.items.length > 0 ? posPayload.items[0] : null;",
+              "const posListed = [",
+              "  [/\\/api\\/v1\\/physical-pos\\/devices$/, 'id', 'pos_device_id'],",
+              "  [/\\/api\\/v1\\/physical-pos\\/payments$/, 'paymentId', 'pos_payment_id'],",
+              "];",
+              "for (const [route, field, variable] of posListed) {",
+              "  if (pm.request.method === 'GET' && route.test(posRoute) && posFirstRow && typeof posFirstRow[field] === 'string' && !pm.environment.get(variable)) {",
+              "    pm.environment.set(variable, posFirstRow[field]);",
+              "  }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Payments",
+          "description": "Start, reverse, cancel and read payments. See the folder description for the shared rules.",
+          "item": [
+            {
+              "name": "List Devices",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Devices: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/devices?limit=25",
+                "description": "Your devices in the key's environment, newest first. Run it first: fills `pos_device_id` with the first row when the variable is empty (set it yourself to pick another device). A payment runs on the logical terminal the device is linked to; the device must be `ACTIVE` and `VERIFIED`.\n\n**Scope:** `physical_pos:view`. Filters: `storeId`, `registerId`, `vendorCode`, `lifecycleStatus`, `ownershipStatus`, `integrationChannel`, `q`, `limit`, `cursor`, `includeTotal`."
+              },
+              "response": []
+            },
+            {
+              "name": "Start Sale",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start Sale: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-sale:{{pos_order_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments",
+                "description": "Starts a card sale on `pos_device_id` with `merchantReference` = `pos_order_ref`. The response is `202 Accepted` with `paymentStatus: NOT_STARTED`: the payment was accepted, not paid. Follow the outcome with the `physical_pos.payment.*` webhooks or `Get Payment`. Stores `data.payment.paymentId` in `pos_payment_id`.\n\nBody: `operation` (`SALE`, `PREAUTH_OPEN`, `REFUND_UNMATCHED`), `target` (exactly one of `deviceId`, `vendorCode` + `serialNumber`, or the device's `externalRef`), `amountMinor` (JSON integer, minor units: `4500` = 45.00 TRY), `currency`, optional `installmentCount` (2–36, SALE only), `merchantReference` (≤ 128 printable ASCII), `allowDuplicateReference`, `startTimeoutSeconds` (5–30), `terminalAcquirerId`, `items`. Never send card data: a card-like field name or value is `400 physical_pos.payment.card_data_rejected`.\n\n**Idempotency-Key:** `pos-sale:{{pos_order_ref}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`. For a new sale, change `pos_order_ref` (your order number); keep it unchanged for every attempt of the same sale.\n\nStarting a payment runs when a payment capability definition exists for the device's model; otherwise `422 physical_pos.payment.operation_unsupported` (`details.reason`: `capability_undefined`) once the device is found and its terminal link and communication channel are checked, and no payment is created.\n\n- `409 physical_pos.payment.device_busy`: retry after `details.retryAfterSeconds` with the same key.\n- `409 physical_pos.payment.previous_outcome_unknown`: an earlier sale with the same reference has an uncertain outcome; wait for it. Do not send `allowDuplicateReference` to get past it.\n- `409 physical_pos.payment.duplicate_reference_recent`: the same reference was approved a short while ago (`details.previousPaymentId`).\n- `503 physical_pos.presence.unavailable` / `signing.unavailable` / `service.busy` / `service.clock_skew`: retry with the same key, with backoff and a limited number of attempts; if it persists, contact support.\n- `429 RATE_LIMITED`: at most 120 payment writes per minute per API key (start, reversal and cancel together).\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Accepted",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-sale:{{pos_order_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Accepted",
+                  "code": 202,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"originalPaymentId\": null,\n      \"origin\": \"API\",\n      \"operation\": \"SALE\",\n      \"paymentStatus\": \"NOT_STARTED\",\n      \"statusReason\": null,\n      \"outcomeConflict\": false,\n      \"resolvable\": false,\n      \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n      \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n      \"terminalAcquirerId\": null,\n      \"channel\": \"APP2APP\",\n      \"vendorReference\": \"01900000000070008000000000000501\",\n      \"amountMinor\": \"4500\",\n      \"approvedAmountMinor\": null,\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"CARD\",\n      \"merchantReference\": \"ORD-0001\",\n      \"reversedMinor\": \"0\",\n      \"capturedMinor\": \"0\",\n      \"reversalReservedMinor\": \"0\",\n      \"pendingReversalId\": null,\n      \"reversalStatus\": \"NONE\",\n      \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n      \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n      \"completedAt\": null,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\",\n      \"rowVersion\": 2,\n      \"historySeq\": 1,\n      \"tender\": {\n        \"tenderStatus\": \"PENDING\",\n        \"cardMasked\": null,\n        \"cardBrand\": null,\n        \"entryMode\": null,\n        \"acquirerCode\": null,\n        \"authCode\": null,\n        \"rrn\": null\n      },\n      \"items\": [],\n      \"refundItems\": []\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 202,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                },
+                {
+                  "name": "Capability not defined",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-sale:{{pos_order_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Unprocessable Entity",
+                  "code": 422,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"failure\",\n  \"code\": \"physical_pos.payment.operation_unsupported\",\n  \"message\": \"This operation is not supported for this device, channel or account settings.\",\n  \"statusCode\": 422,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\",\n  \"details\": {\n    \"reason\": \"capability_undefined\"\n  },\n  \"docsUrl\": \"https://docs.lunixi.com/physical-pos/errors#physical_pos.payment.operation_unsupported\"\n}"
+                },
+                {
+                  "name": "Device busy",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-sale:{{pos_order_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"failure\",\n  \"code\": \"physical_pos.payment.device_busy\",\n  \"message\": \"The device is busy with another operation; retry after `retryAfterSeconds`.\",\n  \"statusCode\": 409,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\",\n  \"details\": {\n    \"reason\": \"payment_in_progress\",\n    \"retryAfterSeconds\": 25\n  },\n  \"docsUrl\": \"https://docs.lunixi.com/physical-pos/errors#physical_pos.payment.device_busy\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Start Sale with Items",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start Sale with Items: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-sale-items:{{pos_order_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments",
+                "description": "A sale with product lines (`merchantReference` = `pos_order_ref` + `-I`). `unitPriceMinor` includes all taxes; `lineTotalMinor` = ROUND_HALF_UP(`quantityMilli` × `unitPriceMinor` / 1000); the line totals add up to `amountMinor`. `taxGroupCode` is the line's only tax input (`KDV0_350`, `KDV1`, `KDV10`, `KDV20`, `KDV10_TEVKIFAT_604`, `OTV25_KDV20`, `KONAKLAMA2_KDV10`, `BSMV5`); the tax breakdown is computed by the server and comes back in `Get Payment`. `barcode` is optional (GTIN-8/12/13/14). Item rule errors: `400 physical_pos.fiscal_document.items_invalid` (`details.field`, `details.reason`, `details.lineNo`).\n\nStores `data.payment.paymentId` in `pos_payment_id`; `Refund Items` refunds line 1 of this sale.\n\n**Idempotency-Key:** `pos-sale-items:{{pos_order_ref}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}-I\",\n  \"items\": [\n    {\n      \"lineNo\": 1,\n      \"name\": \"Tea\",\n      \"quantityMilli\": 2000,\n      \"unitCode\": \"C62\",\n      \"unitPriceMinor\": \"1500\",\n      \"taxGroupCode\": \"KDV10\",\n      \"lineTotalMinor\": \"3000\",\n      \"barcode\": \"8690000000005\"\n    },\n    {\n      \"lineNo\": 2,\n      \"name\": \"Simit\",\n      \"quantityMilli\": 1000,\n      \"unitCode\": \"C62\",\n      \"unitPriceMinor\": \"1500\",\n      \"taxGroupCode\": \"KDV1\",\n      \"lineTotalMinor\": \"1500\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Accepted",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-sale-items:{{pos_order_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}-I\",\n  \"items\": [\n    {\n      \"lineNo\": 1,\n      \"name\": \"Tea\",\n      \"quantityMilli\": 2000,\n      \"unitCode\": \"C62\",\n      \"unitPriceMinor\": \"1500\",\n      \"taxGroupCode\": \"KDV10\",\n      \"lineTotalMinor\": \"3000\",\n      \"barcode\": \"8690000000005\"\n    },\n    {\n      \"lineNo\": 2,\n      \"name\": \"Simit\",\n      \"quantityMilli\": 1000,\n      \"unitCode\": \"C62\",\n      \"unitPriceMinor\": \"1500\",\n      \"taxGroupCode\": \"KDV1\",\n      \"lineTotalMinor\": \"1500\"\n    }\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Accepted",
+                  "code": 202,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"originalPaymentId\": null,\n      \"origin\": \"API\",\n      \"operation\": \"SALE\",\n      \"paymentStatus\": \"NOT_STARTED\",\n      \"statusReason\": null,\n      \"outcomeConflict\": false,\n      \"resolvable\": false,\n      \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n      \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n      \"terminalAcquirerId\": null,\n      \"channel\": \"APP2APP\",\n      \"vendorReference\": \"01900000000070008000000000000501\",\n      \"amountMinor\": \"4500\",\n      \"approvedAmountMinor\": null,\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"CARD\",\n      \"merchantReference\": \"ORD-0001-I\",\n      \"reversedMinor\": \"0\",\n      \"capturedMinor\": \"0\",\n      \"reversalReservedMinor\": \"0\",\n      \"pendingReversalId\": null,\n      \"reversalStatus\": \"NONE\",\n      \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n      \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n      \"completedAt\": null,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\",\n      \"rowVersion\": 2,\n      \"historySeq\": 1,\n      \"tender\": {\n        \"tenderStatus\": \"PENDING\",\n        \"cardMasked\": null,\n        \"cardBrand\": null,\n        \"entryMode\": null,\n        \"acquirerCode\": null,\n        \"authCode\": null,\n        \"rrn\": null\n      },\n      \"items\": [],\n      \"refundItems\": []\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 202,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Start Pre-authorisation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start Pre-authorisation: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-preauth:{{pos_order_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments",
+                "description": "Opens a pre-authorisation (`PREAUTH_OPEN`, `merchantReference` = `pos_order_ref` + `-P`). Stores the payment in `pos_preauth_payment_id`; close it with `Close Pre-authorisation` or release it with `Cancel Pre-authorisation`. Installments and items are SALE only.\n\n**Idempotency-Key:** `pos-preauth:{{pos_order_ref}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"PREAUTH_OPEN\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"10000\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}-P\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Start Unmatched Refund",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start Unmatched Refund: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-unmatched:{{pos_order_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments",
+                "description": "A refund that is not linked to a sale (`REFUND_UNMATCHED`, `merchantReference` = `pos_order_ref` + `-U`). Off by default in the account settings (`422 physical_pos.payment.operation_unsupported`, `disabled_by_setting`); with the \"panel only\" setting an API key gets `403 physical_pos.auth.api_key_not_allowed`. The currency must be the one in the setting; per-refund and daily limits give `422 physical_pos.payment.unmatched_refund_limit_exceeded`. Not stored in a variable.\n\n**Idempotency-Key:** `pos-unmatched:{{pos_order_ref}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"REFUND_UNMATCHED\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"1500\",\n  \"currency\": \"TRY\",\n  \"merchantReference\": \"{{pos_order_ref}}-U\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Payment: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}",
+                "description": "The payment with its items and refund items. Takes no query parameters. Another organization's payment, a payment in the other environment and a missing one all get `404 physical_pos.payment.not_found`.\n\nDecide on `paymentStatus` only: `APPROVED` / `PARTIALLY_APPROVED` = money taken; `DECLINED`, `CANCELLED`, `EXPIRED`, `FAILED` = no money taken; `UNKNOWN` = money may have been taken, **do not start the payment again**; `MANUAL_REVIEW` = resolve it in the panel (`resolvable: true`).\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": [
+                {
+                  "name": "Approved",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"originalPaymentId\": null,\n      \"origin\": \"API\",\n      \"operation\": \"SALE\",\n      \"paymentStatus\": \"APPROVED\",\n      \"statusReason\": \"DEVICE_RESULT_APPROVED\",\n      \"outcomeConflict\": false,\n      \"resolvable\": false,\n      \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n      \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n      \"terminalAcquirerId\": null,\n      \"channel\": \"APP2APP\",\n      \"vendorReference\": \"01900000000070008000000000000501\",\n      \"amountMinor\": \"4500\",\n      \"approvedAmountMinor\": \"4500\",\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"CARD\",\n      \"merchantReference\": \"ORD-0001\",\n      \"reversedMinor\": \"0\",\n      \"capturedMinor\": \"0\",\n      \"reversalReservedMinor\": \"0\",\n      \"pendingReversalId\": null,\n      \"reversalStatus\": \"NONE\",\n      \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n      \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n      \"completedAt\": \"2026-01-02T09:00:20.000Z\",\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:20.000Z\",\n      \"rowVersion\": 4,\n      \"historySeq\": 3,\n      \"tender\": {\n        \"tenderStatus\": \"APPROVED\",\n        \"cardMasked\": \"454360******1234\",\n        \"cardBrand\": \"VISA\",\n        \"entryMode\": \"CONTACTLESS\",\n        \"acquirerCode\": \"0000\",\n        \"authCode\": \"A1B2C3\",\n        \"rrn\": \"000000000001\"\n      },\n      \"items\": [],\n      \"refundItems\": []\n    }\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "List Payments",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Payments: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/payments?limit=25",
+                "description": "Roots and reversals in one list, newest first; tell them apart with `operation` and `rootPaymentId`. Fills `pos_payment_id` with the first row when the variable is empty. `items` / `refundItems` are empty in the list.\n\n**Filters:** `limit` (1–100, default 25; out of range `400 physical_pos.validation.invalid`), `cursor`, `deviceId`, `paymentStatus`, `merchantReference` (exact match), `createdFrom` / `createdTo` (ISO 8601 UTC ending with `Z`; default last 31 days, window ≤ 93 days). Invalid filter `400 physical_pos.input.filter_invalid`, broken cursor `400 physical_pos.cursor.invalid`. `pageInfo.totalCount` is always `null`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "Find Payment by Reference",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Find Payment by Reference: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/payments?merchantReference={{pos_order_ref}}",
+                "description": "After a network error, find your sale by your own reference (`pos_order_ref`, exact match) before you decide anything.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Cancel Payment: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-cancel:{{pos_payment_id}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/cancel",
+                "description": "Cancels a payment whose command has not reached the device yet: the payment becomes `EXPIRED` with `statusReason: MERCHANT_CANCELLED_BEFORE_DISPATCH`. A payment already in a final status comes back unchanged with `replayed: true`, **even when it is `APPROVED`** — read `paymentStatus` in the response. A dispatched or `IN_PROGRESS` payment gets `409 physical_pos.payment.not_cancellable` (`command_dispatched`); an uncertain one `outcome_unknown`. To reverse an approved payment use `Void` or `Refund Amount`.\n\nBody: `{}`. **Idempotency-Key:** optional; here `pos-cancel:{{pos_payment_id}}`. The same key on another payment or operation is `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Cancelled before dispatch",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-cancel:{{pos_payment_id}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/cancel",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"originalPaymentId\": null,\n      \"origin\": \"API\",\n      \"operation\": \"SALE\",\n      \"paymentStatus\": \"EXPIRED\",\n      \"statusReason\": \"MERCHANT_CANCELLED_BEFORE_DISPATCH\",\n      \"outcomeConflict\": false,\n      \"resolvable\": false,\n      \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n      \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n      \"terminalAcquirerId\": null,\n      \"channel\": \"APP2APP\",\n      \"vendorReference\": \"01900000000070008000000000000501\",\n      \"amountMinor\": \"4500\",\n      \"approvedAmountMinor\": null,\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"CARD\",\n      \"merchantReference\": \"ORD-0001\",\n      \"reversedMinor\": \"0\",\n      \"capturedMinor\": \"0\",\n      \"reversalReservedMinor\": \"0\",\n      \"pendingReversalId\": null,\n      \"reversalStatus\": \"NONE\",\n      \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n      \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n      \"completedAt\": \"2026-01-02T09:00:05.000Z\",\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:05.000Z\",\n      \"rowVersion\": 3,\n      \"historySeq\": 2,\n      \"tender\": {\n        \"tenderStatus\": \"PENDING\",\n        \"cardMasked\": null,\n        \"cardBrand\": null,\n        \"entryMode\": null,\n        \"acquirerCode\": null,\n        \"authCode\": null,\n        \"rrn\": null\n      },\n      \"items\": [],\n      \"refundItems\": []\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Void",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Void: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-void:{{pos_payment_id}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                "description": "Voids the whole approved sale (`pos_payment_id` is the root). Only on the sale's own device and terminal, while the sale has no other reversal and before end-of-day. Do not send `amountMinor`. The response is the new child payment (`202`, `operation: VOID`); stores it in `pos_reversal_payment_id`.\n\n- `409 physical_pos.payment.not_reversible` (`details.reason`), `409 physical_pos.payment.reversal_in_progress`.\n- `409 physical_pos.payment.void_after_settlement` (`details.allowedOperation: REFUND`): the sale is already in a device end-of-day; refund it instead (Refund Amount / Refund Items).\n- A sale made directly on the device (`origin: DEVICE_DIRECT`) cannot be voided: `422 physical_pos.payment.operation_unsupported` (`device_direct_refund_only`).\n\n**Idempotency-Key:** `pos-void:{{pos_payment_id}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"VOID\",\n  \"currency\": \"TRY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Accepted",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-void:{{pos_payment_id}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"VOID\",\n  \"currency\": \"TRY\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Accepted",
+                  "code": 202,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-000000000502\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"originalPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"origin\": \"API\",\n      \"operation\": \"VOID\",\n      \"paymentStatus\": \"NOT_STARTED\",\n      \"statusReason\": null,\n      \"outcomeConflict\": false,\n      \"resolvable\": false,\n      \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n      \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n      \"terminalAcquirerId\": null,\n      \"channel\": \"APP2APP\",\n      \"vendorReference\": \"01900000000070008000000000000502\",\n      \"amountMinor\": \"4500\",\n      \"approvedAmountMinor\": null,\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"CARD\",\n      \"merchantReference\": null,\n      \"reversedMinor\": \"0\",\n      \"capturedMinor\": \"0\",\n      \"reversalReservedMinor\": \"0\",\n      \"pendingReversalId\": null,\n      \"reversalStatus\": \"NONE\",\n      \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n      \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n      \"completedAt\": null,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\",\n      \"rowVersion\": 2,\n      \"historySeq\": 1,\n      \"tender\": {\n        \"tenderStatus\": \"PENDING\",\n        \"cardMasked\": null,\n        \"cardBrand\": null,\n        \"entryMode\": null,\n        \"acquirerCode\": null,\n        \"authCode\": null,\n        \"rrn\": null\n      },\n      \"items\": [],\n      \"refundItems\": []\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 202,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                },
+                {
+                  "name": "Settled — refund instead",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-void:{{pos_payment_id}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"VOID\",\n  \"currency\": \"TRY\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"failure\",\n  \"code\": \"physical_pos.payment.void_after_settlement\",\n  \"message\": \"The payment has been settled; it can no longer be voided. Return the amount with a refund instead.\",\n  \"statusCode\": 409,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\",\n  \"details\": {\n    \"allowedOperation\": \"REFUND\"\n  },\n  \"docsUrl\": \"https://docs.lunixi.com/physical-pos/errors#physical_pos.payment.void_after_settlement\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Refund Amount",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Refund Amount: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-refund:{{pos_payment_id}}:{{pos_refund_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                "description": "Refunds an approved sale by amount, up to the approved amount (`400 physical_pos.payment.refund_exceeds_remaining`, `details.remainingMinor`). Partial refunds (less than the full approved amount, or a further refund on a sale that already has one), partial pre-authorisation closes and item refunds require the device model to support them; otherwise `422 physical_pos.payment.operation_unsupported` with `details.reason` `partial_amount_unsupported` or `itemized_unsupported`. Add `target` to refund on another device of yours; the refund goes to the sale's bank. Stores the child payment in `pos_reversal_payment_id`.\n\n**Idempotency-Key:** `pos-refund:{{pos_payment_id}}:{{pos_refund_ref}}`. For a further refund on the same sale, change `pos_refund_ref`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"REFUND\",\n  \"amountMinor\": \"1500\",\n  \"currency\": \"TRY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Partial refund not supported",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-refund:{{pos_payment_id}}:{{pos_refund_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"REFUND\",\n  \"amountMinor\": \"1500\",\n  \"currency\": \"TRY\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Unprocessable Entity",
+                  "code": 422,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"failure\",\n  \"code\": \"physical_pos.payment.operation_unsupported\",\n  \"message\": \"This operation is not supported for this device, channel or account settings.\",\n  \"statusCode\": 422,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\",\n  \"details\": {\n    \"reason\": \"partial_amount_unsupported\"\n  },\n  \"docsUrl\": \"https://docs.lunixi.com/physical-pos/errors#physical_pos.payment.operation_unsupported\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Refund Items",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Refund Items: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-refund-items:{{pos_payment_id}}:{{pos_refund_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                "description": "Refunds sale lines by quantity (`Start Sale with Items` first). The amount is derived from the lines; `amountMinor` is optional and must equal the derived amount. Line errors: `400 physical_pos.payment.refund_items_invalid` (`details.field` `items[i].…`, `details.reason`). Only on a fully approved sale with items. Partial refunds (less than the full approved amount, or a further refund on a sale that already has one), partial pre-authorisation closes and item refunds require the device model to support them; otherwise `422 physical_pos.payment.operation_unsupported` with `details.reason` `partial_amount_unsupported` or `itemized_unsupported`.\n\n**Idempotency-Key:** `pos-refund-items:{{pos_payment_id}}:{{pos_refund_ref}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"REFUND\",\n  \"currency\": \"TRY\",\n  \"items\": [\n    {\n      \"lineNo\": 1,\n      \"quantityMilli\": 1000\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Accepted",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-refund-items:{{pos_payment_id}}:{{pos_refund_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_payment_id}}/reversals",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"REFUND\",\n  \"currency\": \"TRY\",\n  \"items\": [\n    {\n      \"lineNo\": 1,\n      \"quantityMilli\": 1000\n    }\n  ]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Accepted",
+                  "code": 202,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-000000000502\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"originalPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n      \"origin\": \"API\",\n      \"operation\": \"REFUND\",\n      \"paymentStatus\": \"NOT_STARTED\",\n      \"statusReason\": null,\n      \"outcomeConflict\": false,\n      \"resolvable\": false,\n      \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n      \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n      \"terminalAcquirerId\": null,\n      \"channel\": \"APP2APP\",\n      \"vendorReference\": \"01900000000070008000000000000502\",\n      \"amountMinor\": \"1500\",\n      \"approvedAmountMinor\": null,\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"CARD\",\n      \"merchantReference\": null,\n      \"reversedMinor\": \"0\",\n      \"capturedMinor\": \"0\",\n      \"reversalReservedMinor\": \"0\",\n      \"pendingReversalId\": null,\n      \"reversalStatus\": \"NONE\",\n      \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n      \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n      \"completedAt\": null,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\",\n      \"rowVersion\": 2,\n      \"historySeq\": 1,\n      \"tender\": {\n        \"tenderStatus\": \"PENDING\",\n        \"cardMasked\": null,\n        \"cardBrand\": null,\n        \"entryMode\": null,\n        \"acquirerCode\": null,\n        \"authCode\": null,\n        \"rrn\": null\n      },\n      \"items\": [],\n      \"refundItems\": []\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 202,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Reversal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Reversal: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_reversal_payment_id}}",
+                "description": "The last reversal you started (void, refund, pre-authorisation close or cancel), stored in `pos_reversal_payment_id`. Its `originalPaymentId` is the root; read the root with `Get Payment` for its new `reversalStatus`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "Close Pre-authorisation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Close Pre-authorisation: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-preauth-close:{{pos_preauth_payment_id}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_preauth_payment_id}}/reversals",
+                "description": "Captures the open pre-authorisation in `pos_preauth_payment_id` (`Start Pre-authorisation` first). `amountMinor` is required: at most the approved amount plus the margin the device model allows (`400 physical_pos.payment.amount_invalid`, `preauth_close_exceeds_tolerance`). Closing for less than the open amount is a partial close and needs device model support (`422`, `partial_amount_unsupported`). Runs only on the pre-authorisation's device.\n\n**Idempotency-Key:** `pos-preauth-close:{{pos_preauth_payment_id}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"PREAUTH_CLOSE\",\n  \"amountMinor\": \"10000\",\n  \"currency\": \"TRY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Pre-authorisation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Cancel Pre-authorisation: 200/202', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 202]);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-preauth-cancel:{{pos_preauth_payment_id}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments/{{pos_preauth_payment_id}}/reversals",
+                "description": "Releases the whole open pre-authorisation in `pos_preauth_payment_id`. Do not send `amountMinor`. Runs only on the pre-authorisation's device.\n\n**Idempotency-Key:** `pos-preauth-cancel:{{pos_preauth_payment_id}}`. **Idempotency-Key:** required, 8–200 printable ASCII. The key is built from the request's own variables (no random part), so pressing Send again after a timeout or a `5xx` sends the SAME key and body: an existing payment comes back with `200`, `replayed: true`, and no second payment is opened. Same key + another body or operation → `409 physical_pos.idempotency_mismatch`.\n\n**Scope:** `physical_pos:payments`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"PREAUTH_CANCEL\",\n  \"currency\": \"TRY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Transactions & Reports",
+          "description": "Read-only: transaction trees, uncertain payments, sales and tax summaries, end-of-day records. No Idempotency-Key, no rate limit.",
+          "item": [
+            {
+              "name": "List Transactions",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Transactions: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/transactions?limit=25",
+                "description": "Transactions as trees: each row is a root (`SALE`, `PREAUTH_OPEN`, `REFUND_UNMATCHED`) with up to 50 reversals (`childrenTruncated`), an item summary and the store / register at payment time. Newest root first.\n\n**Filters:** `limit` (1–100, default 25), `cursor`, `createdFrom` / `createdTo` (≤ 93 days), `paymentStatus` (root), `deviceId`, `storeId`, `registerId`, `merchantReference`, `amountFromMinor` / `amountToMinor` (root's requested amount, inclusive), `origin` (`API` | `DEVICE_DIRECT`), `operation`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": [
+                {
+                  "name": "Transactions",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/transactions?limit=25"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"root\": {\n          \"paymentId\": \"01900000-0000-7000-8000-000000000501\",\n          \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n          \"originalPaymentId\": null,\n          \"origin\": \"API\",\n          \"operation\": \"SALE\",\n          \"paymentStatus\": \"APPROVED\",\n          \"statusReason\": null,\n          \"outcomeConflict\": false,\n          \"resolvable\": false,\n          \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n          \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n          \"terminalAcquirerId\": null,\n          \"channel\": \"APP2APP\",\n          \"vendorReference\": \"01900000000070008000000000000501\",\n          \"amountMinor\": \"4500\",\n          \"approvedAmountMinor\": \"4500\",\n          \"currency\": \"TRY\",\n          \"installmentCount\": null,\n          \"instrument\": \"CARD\",\n          \"merchantReference\": \"ORD-0001\",\n          \"reversedMinor\": \"1500\",\n          \"capturedMinor\": \"0\",\n          \"reversalReservedMinor\": \"0\",\n          \"pendingReversalId\": null,\n          \"reversalStatus\": \"PARTIALLY_REFUNDED\",\n          \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n          \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n          \"completedAt\": \"2026-01-02T09:00:20.000Z\",\n          \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n          \"updatedAt\": \"2026-01-02T09:00:00.000Z\",\n          \"rowVersion\": 2,\n          \"historySeq\": 1,\n          \"tender\": {\n            \"tenderStatus\": \"APPROVED\",\n            \"cardMasked\": \"454360******1234\",\n            \"cardBrand\": \"VISA\",\n            \"entryMode\": \"CONTACTLESS\",\n            \"acquirerCode\": \"0000\",\n            \"authCode\": \"A1B2C3\",\n            \"rrn\": \"000000000001\"\n          },\n          \"items\": [],\n          \"refundItems\": []\n        },\n        \"children\": [\n          {\n            \"paymentId\": \"01900000-0000-7000-8000-000000000502\",\n            \"rootPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n            \"originalPaymentId\": \"01900000-0000-7000-8000-000000000501\",\n            \"origin\": \"API\",\n            \"operation\": \"REFUND\",\n            \"paymentStatus\": \"APPROVED\",\n            \"statusReason\": null,\n            \"outcomeConflict\": false,\n            \"resolvable\": false,\n            \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n            \"logicalTerminalId\": \"00000000-0000-0000-0000-000000000301\",\n            \"terminalAcquirerId\": null,\n            \"channel\": \"APP2APP\",\n            \"vendorReference\": \"01900000000070008000000000000502\",\n            \"amountMinor\": \"1500\",\n            \"approvedAmountMinor\": \"1500\",\n            \"currency\": \"TRY\",\n            \"installmentCount\": null,\n            \"instrument\": \"CARD\",\n            \"merchantReference\": \"ORD-0001\",\n            \"reversedMinor\": \"0\",\n            \"capturedMinor\": \"0\",\n            \"reversalReservedMinor\": \"0\",\n            \"pendingReversalId\": null,\n            \"reversalStatus\": \"NONE\",\n            \"expiresAt\": \"2026-01-02T09:00:30.000Z\",\n            \"resultDeadlineAt\": \"2026-01-02T09:03:30.000Z\",\n            \"completedAt\": \"2026-01-02T10:00:20.000Z\",\n            \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n            \"updatedAt\": \"2026-01-02T09:00:00.000Z\",\n            \"rowVersion\": 2,\n            \"historySeq\": 1,\n            \"tender\": {\n              \"tenderStatus\": \"APPROVED\",\n              \"cardMasked\": \"454360******1234\",\n              \"cardBrand\": \"VISA\",\n              \"entryMode\": \"CONTACTLESS\",\n              \"acquirerCode\": \"0000\",\n              \"authCode\": \"A1B2C3\",\n              \"rrn\": \"000000000001\"\n            },\n            \"items\": [],\n            \"refundItems\": []\n          }\n        ],\n        \"childrenTruncated\": false,\n        \"itemSummary\": {\n          \"lineCount\": 2,\n          \"refundStatus\": \"PARTIAL\",\n          \"refundedMinor\": \"1500\"\n        },\n        \"storeId\": \"00000000-0000-0000-0000-000000000101\",\n        \"registerId\": \"00000000-0000-0000-0000-000000000201\"\n      }\n    ],\n    \"pageInfo\": {\n      \"hasMore\": false,\n      \"nextCursor\": null,\n      \"totalCount\": null\n    }\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "List Uncertain Payments",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Uncertain Payments: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/transactions/ambiguous?limit=25",
+                "description": "Payments (roots and reversals) in `UNKNOWN` or `MANUAL_REVIEW`, newest first, no time window. Do not start these payments again. `resolvable: true` = can be resolved in the panel (there is no API endpoint for resolving).\n\n**Filters:** `limit`, `cursor`, `deviceId`, `paymentStatus` (`UNKNOWN` | `MANUAL_REVIEW`).\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Transaction",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Transaction: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/transactions/{{pos_payment_id}}",
+                "description": "A transaction's root with its items, all reversals with their refund items, and the timeline (payment, command and fiscal document events, oldest first, at most the newest 500 rows). A reversal's ID returns the root's tree. Takes no query parameters.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "Sales Summary",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Sales Summary: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/reports/sales-summary?groupBy=DAY",
+                "description": "Sale (`SALE` + `PREAUTH_CLOSE`), refund (`REFUND` + `REFUND_UNMATCHED`) and void counts and approved amounts with `netMinor` = sale − refund − void, per currency; uncertain operations only as `ambiguousCount`. Business days in Europe/Istanbul.\n\n**Filters:** `dateFrom` / `dateTo` (`YYYY-MM-DD`, inclusive; default last 7 days; ≤ 93 days), `deviceId`, `storeId`, `groupBy` (`DAY` | `STORE` | `DEVICE` | `INSTRUMENT`).\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": [
+                {
+                  "name": "Daily summary",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/reports/sales-summary?groupBy=DAY"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"environment\": \"LIVE\",\n    \"dateFrom\": \"2026-01-01\",\n    \"dateTo\": \"2026-01-07\",\n    \"groupBy\": \"DAY\",\n    \"rows\": [\n      {\n        \"groupKey\": \"2026-01-02\",\n        \"currency\": \"TRY\",\n        \"saleCount\": 120,\n        \"saleMinor\": \"540000\",\n        \"refundCount\": 3,\n        \"refundMinor\": \"12000\",\n        \"voidCount\": 1,\n        \"voidMinor\": \"4500\",\n        \"netMinor\": \"523500\",\n        \"ambiguousCount\": 0\n      }\n    ]\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Tax Summary",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Tax Summary: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/reports/tax-summary",
+                "description": "Tax breakdown per tax type, rate and currency, computed from the sale items, with refunds and voids deducted; `amountTotals` gives `ITEMIZED` / `ITEMLESS` amount counters (their `netMinor` adds up to the sales summary's net).\n\n**Filters:** `dateFrom` / `dateTo`, `deviceId`, `storeId`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "List End-of-Day Records",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List End-of-Day Records: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/settlements?limit=25",
+                "description": "End-of-day results per bank line: what the device reported (`reported`), what Lunixi's records give (`system`, card payments only) and `difference` (can be negative). `lineStatus`: `MATCHED`, `MISMATCH` or `UNMAPPED` (bank not recognised; not compared).\n\n**Filters:** `limit`, `cursor` (use as is), `createdFrom` / `createdTo`, `deviceId`, `lineStatus`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
             }
           ]
         }

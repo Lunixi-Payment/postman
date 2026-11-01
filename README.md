@@ -191,8 +191,8 @@ are synthetic.
 ## Amounts
 
 Every payment body (checkout intent, `direct/payment`) has one amount
-field: `amount`, the basket total in minor units as an integer
-(`{{amount_minor}}`, `10050` is 100.50 TRY). The basket items' `price` values add
+field: `amount`, the basket total as a canonical minor-unit string
+(`"{{amount_minor}}"`, `"10050"` is 100.50 TRY). The basket items' `price` values add
 up to it. A promissory-note schedule example carries literal note amounts and its
 `amount` is their total. `price` and `paidPrice` are no longer body fields; the gateway answers
 them with `400 payment.amount.field_removed`. An installment fee is never part of
@@ -458,6 +458,68 @@ in five sub-folders and in run order. The folder is the same in both collections
 - An insurer that collects the premium itself (`premiumCollectedBy: PROVIDER`) cannot
   be completed through this API yet; the folder always picks an option you collect.
 
+## Physical POS
+
+Both payment collections have a **Physical POS** folder for
+`/api/v1/physical-pos`: a **Payments** subfolder (List Devices, Start Sale, Start
+Sale with Items, Start Pre-authorisation, Start Unmatched Refund, Get Payment,
+List Payments, Find Payment by Reference, Cancel Payment, Void, Refund Amount,
+Refund Items, Get Reversal, Close Pre-authorisation, Cancel Pre-authorisation)
+and a **Transactions & Reports** subfolder (List Transactions, List Uncertain
+Payments, Get Transaction, Sales Summary, Tax Summary, List End-of-Day Records).
+The folder is the same in both collections, and the main requests carry example
+responses (fake, masked values).
+
+- **Signed on every request**, reads included; the collection signs every gateway
+  request. Unsigned is `401 AUTH_HEADERS_MISSING`.
+- **The key needs** the `PHYSICAL_POS` product (otherwise `403
+  PRODUCT_NOT_ENABLED`) and `physical_pos:payments` to start, reverse and cancel
+  payments. Reads take `physical_pos:view` or `physical_pos:payments`; `List
+  Devices` needs `physical_pos:view`.
+- **The key decides the environment**: a TEST key (`mk_test_…`) only reads;
+  starting, reversing and cancelling get `403
+  physical_pos.environment.test_key_read_only`.
+- **Asynchronous**: a start or a reversal answers `202 Accepted` with
+  `paymentStatus: NOT_STARTED`; the outcome comes with the
+  `physical_pos.payment.*` webhooks (subscribe a `PHYSICAL_POS` endpoint to
+  `physical_pos.*`) or `Get Payment`.
+- **Same key on retry**: the `Idempotency-Key` and the `merchantReference` are
+  built from `pos_order_ref`, `pos_payment_id`, `pos_preauth_payment_id` and
+  `pos_refund_ref` (`pos-sale:{{pos_order_ref}}`,
+  `pos-refund:{{pos_payment_id}}:{{pos_refund_ref}}` …), never from
+  `{{$guid}}` or `{{$timestamp}}`. After a timeout or a `5xx`, press Send again
+  without changing anything: an opened payment comes back with `200`,
+  `replayed: true`, and no second payment is created. Change `pos_order_ref` for a
+  new sale and `pos_refund_ref` for a further refund on the same sale. Do not send
+  `allowDuplicateReference` after `409
+  physical_pos.payment.previous_outcome_unknown`.
+- **`UNKNOWN` means money may have been taken**: never start that payment again;
+  `MANUAL_REVIEW` is resolved in the dashboard.
+- **Chained variables**: `List Devices` fills `pos_device_id` when it is empty;
+  `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start
+  Pre-authorisation` stores `pos_preauth_payment_id`, and the reversal requests
+  store `pos_reversal_payment_id`. An unmatched refund is not stored.
+- Partial refunds, several refunds on one sale, partial pre-authorisation closes
+  and item refunds need the device model to support them (`422
+  physical_pos.payment.operation_unsupported`, `partial_amount_unsupported` /
+  `itemized_unsupported`). A start on a device model without a payment
+  capability definition is `422` with `capability_undefined`.
+- **Device readiness**: a start or a reversal on a device that is not ready
+  (not connected, or its app not ready) is `409
+  physical_pos.payment.device_offline`; when Lunixi cannot verify the device's
+  status it is `503 physical_pos.presence.unavailable` (press Send again later;
+  the key is the same). The device detail's `presence.notReadyReason` tells
+  why. Nothing is queued.
+- **End of day**: `Void` on a sale that is already in a device end-of-day is
+  `409 physical_pos.payment.void_after_settlement` (`details.allowedOperation:
+  REFUND`, example on `Void`); use `Refund Amount` or `Refund Items`.
+- **Sales made on the device** (`origin: DEVICE_DIRECT`) arrive with the
+  `physical_pos.payment.device_sale` webhook. They can only be refunded, on the
+  same device; a void is `422 … device_direct_refund_only`. Reversal webhooks
+  carry `original: { paymentId, origin }`.
+- At most 120 payment writes per minute per API key (`429 RATE_LIMITED` with
+  `Retry-After`); reads are not limited.
+
 ## Which One Should We Give Customers?
 
 Give both:
@@ -586,3 +648,9 @@ and empty.
 
 - `docs/SIGNING_AND_TOKEN_AUTOMATION.md`
 - `standalone/THIRD_PARTY_NOTICES.md`
+
+## Money API 1.0
+
+All monetary JSON values in these collections are canonical minor-unit strings, including template substitutions and basket, split, note and insurance totals. Counts/rates remain numeric. Insurance chaining validates strings and adds with BigInt without rounding. Use JPY/TRY/KWD exponents 0/2/3 when deriving minor units outside the collection; never convert through floating point. Raw body signatures and stable idempotency keys remain unchanged. These snapshots target the breaking 1.0 money contract; older numeric-money requests must be migrated.
+
+Physical POS payment/reversal/item amounts and response totals use canonical minor-unit strings, including the saved examples in both signing profiles. Counts, quantities, rates and sequence numbers remain JSON numbers. Omit derived/unused reversal amounts; do not send null.

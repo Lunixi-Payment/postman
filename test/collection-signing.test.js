@@ -374,6 +374,10 @@ async function startGateway(publicKey, storageUrl) {
         const answer = bankConnectReply(req.method, req.url.split('?')[0].slice('/api/v1/bank-connect'.length));
         return reply(answer.status, { status: 'success', code: 'SUCCESS', data: answer.data, ...(answer.pageInfo ? { pageInfo: answer.pageInfo } : {}), requestId: 'req_lock' });
       }
+      if (req.url.startsWith('/api/v1/physical-pos/')) {
+        const answer = physicalPosReply(req.method, req.url.split('?')[0].slice('/api/v1/physical-pos'.length), raw);
+        return reply(answer.status, { status: 'success', code: 'SUCCESS', data: answer.data, ...(answer.pageInfo ? { pageInfo: answer.pageInfo } : {}), statusCode: answer.status, requestId: 'req_lock' });
+      }
       const noteAnswer = promissoryNoteReply(req.method, req.url.split('?')[0], raw);
       if (noteAnswer && noteAnswer.pdf) {
         res.writeHead(200, { 'Content-Type': 'application/pdf' });
@@ -458,7 +462,7 @@ function splitReply(method, url, raw, idempotencyKey, issued) {
     if (split.mixed && !known) {
       const pendingStep = {
         legId: crypto.randomUUID(), sequence: 2, step: 'ACTION', paymentMethod: 'MOBILE_BILLING', providerCode: 'PAYCELL_MOBILE_BILLING',
-        amount: 4000, paymentId: split.legPaymentId, actionId: split.actionId, redirectPath: null, action: null,
+        amount: '4000', paymentId: split.legPaymentId, actionId: split.actionId, redirectPath: null, action: null,
       };
       return { status: 400, body: { status: 'failure', code: 'AWAITING_ACTION', statusCode: 400, data: { ...data, status: 'AWAITING_ACTION', steps: [], pendingStep } } };
     }
@@ -470,7 +474,7 @@ function splitReply(method, url, raw, idempotencyKey, issued) {
   }
   const detail = /^\/api\/v1\/payments\/split\/([^/]+)$/.exec(route);
   if (method === 'GET' && detail) {
-    return { status: 200, body: { status: 'success', code: 'SUCCESS', data: { id: detail[1], status: 'COMPLETED', legs: [], refund: { refundableAmount: 10000, nonRefundableAmount: 0, refundedAmount: 0 } } } };
+    return { status: 200, body: { status: 'success', code: 'SUCCESS', data: { id: detail[1], status: 'COMPLETED', legs: [], refund: { refundableAmount: '10000', nonRefundableAmount: '0', refundedAmount: '0' } } } };
   }
   if (method === 'GET' && route === '/api/v1/payments/split') {
     return { status: 200, body: { status: 'success', code: 'SUCCESS', data: { items: [], pageInfo: { hasNextPage: false, endCursor: null }, totalCount: null } } };
@@ -488,7 +492,7 @@ function promissoryNoteReply(method, route, raw) {
   const [, paymentId, operation] = match;
   if (method === 'GET' && operation === '/document') return { pdf: '%PDF-1.7\n%lock\n' };
   const note = (serialNumber, sequence, status) => ({
-    serialNumber, sequence, amount: 100000 * sequence, dueDate: `2030-0${sequence}-15`, status, paidAt: null, protestedAt: null, cancelledAt: null,
+    serialNumber, sequence, amount: (100000n * BigInt(sequence)).toString(), dueDate: `2030-0${sequence}-15`, status, paidAt: null, protestedAt: null, cancelledAt: null,
   });
   const data = {
     paymentId,
@@ -496,7 +500,7 @@ function promissoryNoteReply(method, route, raw) {
     documentType: 'PROMISSORY_NOTE',
     rowSerialNumber: 'ROW-LOCK-0001',
     currency: 'TRY',
-    totalAmount: 300000,
+    totalAmount: '300000',
     notes: [note(PROMISSORY_NOTE_SERIALS.cancelled, 1, 'CANCELLED'), note(PROMISSORY_NOTE_SERIALS.open, 2, 'ISSUED')],
   };
   if (method === 'POST' && operation === '/cancel') {
@@ -606,7 +610,7 @@ function bankConnectReply(method, route) {
   if (method === 'POST') return { status: 202, data: { accountId: route.split('/')[2], syncStatus: 'QUEUED', minSyncIntervalSeconds: 300 } };
   if (route === '/connections') return { status: 200, data: { items: [{ connectionId: BANK_IDS.connection, status: 'ACTIVE', accountCount: 1 }] }, pageInfo: lastPage };
   if (route === '/accounts') return { status: 200, data: { items: [{ accountId: BANK_IDS.account, connectionId: BANK_IDS.connection, currency: 'TRY' }] }, pageInfo: lastPage };
-  if (route === '/transactions') return { status: 200, data: { items: [{ transactionId: BANK_IDS.transaction, accountId: BANK_IDS.account, amountMinor: 150000 }] }, pageInfo: lastPage };
+  if (route === '/transactions') return { status: 200, data: { items: [{ transactionId: BANK_IDS.transaction, accountId: BANK_IDS.account, amountMinor: '150000' }] }, pageInfo: lastPage };
   if (['/banks', '/balances'].includes(route)) return { status: 200, data: { items: [] }, pageInfo: lastPage };
   return { status: 200, data: {} };
 }
@@ -672,7 +676,7 @@ function insuranceReply(method, route, raw, issued) {
     quoteId: `insq_${hex()}`,
     insuranceType: 'TICKET_CANCELLATION',
     schemaVersion: 1,
-    premiumAmount,
+    premiumAmount: String(premiumAmount),
     currency: 'TRY',
     premiumCollectedBy,
     terms: { version: `v${issued.quotes.length + 1}`, sha256: crypto.randomBytes(32).toString('hex') },
@@ -695,7 +699,7 @@ function insuranceReply(method, route, raw, issued) {
       status: 'CREATED',
       paymentMode: 'NO_PAYMENT',
       premiumCollectedBy: 'MERCHANT',
-      premiumAmount: INSURANCE_SAMPLE_PREMIUM + issued.orders.length * 100,
+      premiumAmount: String(INSURANCE_SAMPLE_PREMIUM + issued.orders.length * 100),
       currency: 'TRY',
       paymentIntentId: null,
       policies: [],
@@ -875,6 +879,7 @@ async function setUp(profile) {
     ...BANK_TRANSFER_ENVIRONMENT,
     ...SANCTION_ENVIRONMENT,
     ...INSURANCE_ENVIRONMENT,
+    ...POS_ENVIRONMENT,
   });
   const teardown = async () => { if (signer) signer.close(); await gateway.close(); await storage.close(); };
   return { gateway, storage, environment, teardown };
@@ -896,6 +901,60 @@ async function runItem(collection, entry, environment) {
   }
   return { response, tests };
 }
+
+// --- Physical POS stand-in (begin) ---
+// Physical POS answers (contract: gateway physical-pos-payments.mapper.ts and
+// physical-pos-transactions.mapper.ts, under the envelope's `data`). A sale, a
+// pre-authorisation, an unmatched refund and a reversal get different ids, so a request
+// that uses the wrong chained variable is caught.
+const POS_IDS = {
+  device: '50000000-0000-4000-8000-000000000001',
+  sale: '01900000-0000-7000-8000-000000000501',
+  preauth: '01900000-0000-7000-8000-000000000502',
+  unmatched: '01900000-0000-7000-8000-000000000503',
+  reversal: '01900000-0000-7000-8000-000000000504',
+  listed: '01900000-0000-7000-8000-000000000505',
+};
+function physicalPosReply(method, route, raw) {
+  const lastPage = { hasMore: false, nextCursor: null, totalCount: null };
+  let body = {};
+  try { body = raw ? JSON.parse(raw) : {}; } catch (e) { body = {}; }
+  if (method === 'GET' && route === '/devices') return { status: 200, data: { items: [{ id: POS_IDS.device }] }, pageInfo: lastPage };
+  if (method === 'POST' && route === '/payments') {
+    const ids = { SALE: POS_IDS.sale, PREAUTH_OPEN: POS_IDS.preauth, REFUND_UNMATCHED: POS_IDS.unmatched };
+    const paymentId = ids[body.operation] || POS_IDS.sale;
+    return {
+      status: 202,
+      data: { payment: { paymentId, rootPaymentId: paymentId, originalPaymentId: null, operation: body.operation, paymentStatus: 'NOT_STARTED', merchantReference: body.merchantReference ?? null }, replayed: false },
+    };
+  }
+  const reversal = /^\/payments\/([^/]+)\/reversals$/.exec(route);
+  if (method === 'POST' && reversal) {
+    return {
+      status: 202,
+      data: { payment: { paymentId: POS_IDS.reversal, rootPaymentId: reversal[1], originalPaymentId: reversal[1], operation: body.operation, paymentStatus: 'NOT_STARTED', merchantReference: null }, replayed: false },
+    };
+  }
+  const cancel = /^\/payments\/([^/]+)\/cancel$/.exec(route);
+  if (method === 'POST' && cancel) {
+    return { status: 200, data: { payment: { paymentId: cancel[1], rootPaymentId: cancel[1], operation: 'SALE', paymentStatus: 'EXPIRED' }, replayed: false } };
+  }
+  if (method === 'GET' && route === '/payments') return { status: 200, data: { items: [{ paymentId: POS_IDS.listed, operation: 'SALE' }] }, pageInfo: lastPage };
+  if (method === 'GET' && ['/transactions', '/transactions/ambiguous', '/settlements'].includes(route)) return { status: 200, data: { items: [] }, pageInfo: lastPage };
+  if (method === 'GET' && /^\/payments\/[^/]+$/.test(route)) return { status: 200, data: { payment: { paymentId: route.split('/')[2] } } };
+  return { status: 200, data: {} };
+}
+// The Physical POS folder chains pos_device_id, pos_payment_id, pos_preauth_payment_id and
+// pos_reversal_payment_id itself; pos_order_ref and pos_refund_ref are filled by the user.
+const POS_ENVIRONMENT = {
+  pos_device_id: '',
+  pos_payment_id: '',
+  pos_preauth_payment_id: '',
+  pos_reversal_payment_id: '',
+  pos_order_ref: 'ORD-LOCK-0001',
+  pos_refund_ref: 'RF-LOCK-0001',
+};
+// --- Physical POS stand-in (end) ---
 
 // --- Tests ----------------------------------------------------------------------------
 
@@ -1075,7 +1134,7 @@ for (const profile of ['standalone', 'local-signer']) {
       }
       const create = hits.filter((hit) => linkRoute(hit) === 'POST /api/v1/payments/links');
       for (const hit of create) assert.equal(typeof JSON.parse(hit.raw).amountMode, 'string');
-      assert.equal(JSON.parse(create[0].raw).amountMinor, 10050, 'money is sent as an integer in minor units');
+      assert.equal(JSON.parse(create[0].raw).amountMinor, '10050', 'money is sent as an integer in minor units');
 
       // Link image: declared as PublicAssetUploadDto takes it, PUT to the issued storage URL
       // without the key's credentials, then confirmed and set by the issued asset id.
@@ -1617,7 +1676,7 @@ for (const profile of ['standalone', 'local-signer']) {
         assert.deepEqual(route.required.filter((key) => body[key] === undefined || body[key] === ''), [], `${name}: required body fields`);
         assert.doesNotMatch(hit.raw, /\{\{/, `${name}: every variable is resolved`);
         for (const key of ['amountMinor', 'sourceAmountMinor', 'targetAmountMinor']) {
-          if (body[key] !== undefined) assert.ok(Number.isSafeInteger(body[key]) && body[key] > 0, `${name}: ${key} is a positive integer`);
+          if (body[key] !== undefined) assert.match(body[key], /^[1-9][0-9]*$/, `${name}: ${key} is a positive integer`);
         }
         if (name === 'createFxQuote') {
           assert.equal((body.sourceAmountMinor === undefined) !== (body.targetAmountMinor === undefined), true, 'exactly one quote amount');
@@ -1810,7 +1869,7 @@ function checkDirectMethodBody(body, label) {
   for (const field of ['paymentMethod', 'amount', 'currency', 'orderId']) {
     assert.notEqual(body[field], undefined, `${label}: ${field} is required`);
   }
-  assert.ok(Number.isSafeInteger(body.amount) && body.amount >= 1, `${label}: amount is an integer in minor units`);
+  assert.match(body.amount, /^[1-9][0-9]*$/, `${label}: amount is an integer in minor units`);
   assert.deepEqual(REMOVED_AMOUNT_FIELDS.filter((field) => body[field] !== undefined), [], `${label}: price / paidPrice were removed`);
   const own = blockNameOf(body.paymentMethod);
   assert.ok(body[own] && typeof body[own] === 'object', `${label}: the ${own} block is present`);
@@ -1881,19 +1940,19 @@ test('every payment body sends amount equal to its basket total and no removed a
       const schedule = body.promissoryNote && Array.isArray(body.promissoryNote.schedule) ? body.promissoryNote.schedule : null;
       if (schedule) {
         // A promissory-note schedule carries literal note amounts; amount is their total.
-        assert.ok(Number.isSafeInteger(body.amount) && body.amount >= 1, `${label}: amount is an integer in minor units`);
-        assert.equal(schedule.reduce((sum, row) => sum + row.amount, 0), body.amount, `${label}: the schedule adds up to amount`);
+        assert.match(body.amount, /^[1-9][0-9]*$/, `${label}: amount is an integer in minor units`);
+        assert.equal(schedule.reduce((sum, row) => sum + BigInt(row.amount), 0n).toString(), body.amount, `${label}: the schedule adds up to amount`);
       } else if (insured) {
-        assert.equal(body.amount, ticketPrice + INSURANCE_SAMPLE_PREMIUM, `${label}: amount is {{insurance_payment_amount}}, an integer`);
+        assert.equal(body.amount, String(ticketPrice + INSURANCE_SAMPLE_PREMIUM), `${label}: amount is {{insurance_payment_amount}}, an integer`);
       } else {
-        assert.equal(body.amount, SAMPLE_AMOUNT, `${label}: amount is {{amount_minor}}, an integer`);
+        assert.equal(body.amount, String(SAMPLE_AMOUNT), `${label}: amount is {{amount_minor}}, an integer`);
       }
       assert.deepEqual(REMOVED_AMOUNT_FIELDS.filter((field) => body[field] !== undefined), [], `${label}: price / paidPrice were removed`);
       if (Array.isArray(body.basketItems) && body.basketItems.length > 0) {
-        assert.equal(body.basketItems.reduce((sum, basketItem) => sum + basketItem.price, 0), body.amount, `${label}: basket total equals amount`);
+        assert.equal(body.basketItems.reduce((sum, basketItem) => sum + BigInt(basketItem.price), 0n).toString(), body.amount, `${label}: basket total equals amount`);
       }
       if (Array.isArray(body.sellers)) {
-        assert.equal(body.sellers.reduce((sum, seller) => sum + Number(seller.amountMinor), 0), body.amount, `${label}: seller legs add up to amount`);
+        assert.equal(body.sellers.reduce((sum, seller) => sum + BigInt(seller.amountMinor), 0n).toString(), body.amount, `${label}: seller legs add up to amount`);
       }
       checked.add(route);
     }
@@ -2140,7 +2199,7 @@ for (const profile of ['standalone', 'local-signer']) {
       assert.equal(hits[4].url, `/api/v1/payments/split/${mixed.splitPaymentId}`, 'the read uses the chained split id');
       assert.equal(hits[5].url, '/api/v1/payments/split?status=COMPLETED&limit=10');
       assert.equal(hits[6].url, `/api/v1/payments/split/${mixed.splitPaymentId}/refund`);
-      assert.deepEqual(JSON.parse(hits[6].raw), { amount: 1500, reason: 'postman-test' });
+      assert.deepEqual(JSON.parse(hits[6].raw), { amount: '1500', reason: 'postman-test' });
       assert.equal(environment.store.get('split_payment_id'), mixed.splitPaymentId);
 
       // A split id never lands in payment_id (the split detail carries it in `id`).
@@ -2211,7 +2270,7 @@ test('promissory-note bodies follow the plan rules and use no provider code', ()
     if (block.schedule !== undefined) {
       const schedule = requirePromissoryNoteSchedule(block.schedule);
       assert.ok(schedule.length <= PROMISSORY_NOTE_MAX_SCHEDULE_ITEMS);
-      assert.equal(schedule.reduce((sum, row) => sum + row.amount, 0), body.amount, `${name}: the schedule adds up to amount`);
+      assert.equal(schedule.reduce((sum, row) => sum + BigInt(row.amount), 0n).toString(), body.amount, `${name}: the schedule adds up to amount`);
     } else if (block.noteCount !== undefined) {
       assert.equal(requireNoteCount(block.noteCount), block.noteCount, `${name}: noteCount is a digit string`);
     }
@@ -2462,7 +2521,7 @@ for (const profile of ['standalone', 'local-signer']) {
         category1: 'insurance',
         itemType: 'VIRTUAL',
       }, 'the premium item: id = orderId, VIRTUAL, price = premium, no insurance field');
-      assert.equal(intent.amount, intent.basketItems[0].price + lunixiOrder.premiumAmount, 'amount is ticket + premium');
+      assert.equal(intent.amount, (BigInt(intent.basketItems[0].price) + BigInt(lunixiOrder.premiumAmount)).toString(), 'amount is ticket + premium');
 
       // Each flow acts on its own order; the bind uses the payment, which insurance answers never overwrite.
       const lunixiPath = `/api/v1/insurance/orders/${lunixiOrder.orderId}`;
@@ -2553,7 +2612,7 @@ for (const profile of ['standalone', 'local-signer']) {
     assert.equal(runTests('GET', `${base}/reference/CITY?limit=100`, cities, { insurance_city_code: '35' }).store.get('insurance_city_code'), '35', 'a city code set by the user is kept');
     assert.equal(runTests('GET', `${base}/reference/CITY?limit=100`, cities, { insurance_city_code: '' }).store.get('insurance_city_code'), '06');
 
-    const order = { data: { orderId: `inso_${'2'.repeat(32)}`, premiumAmount: 4900, paymentIntentId: '40000000-0000-4000-8000-000000000001', policies: [] } };
+    const order = { data: { orderId: `inso_${'2'.repeat(32)}`, premiumAmount: '4900', paymentIntentId: '40000000-0000-4000-8000-000000000001', policies: [] } };
     const created = runTests('POST', `${base}/orders`, order, { insurance_ticket_price_minor: '100000' }).store;
     assert.equal(created.get('insurance_order_id'), order.data.orderId);
     assert.equal(created.get('insurance_premium_amount'), '4900');
@@ -2561,3 +2620,225 @@ for (const profile of ['standalone', 'local-signer']) {
     assert.equal(created.get('payment_id'), 'pi_original', 'an insurance order is not a payment');
   });
 }
+
+// --- Physical POS folder lock (begin) ---
+// --- Physical POS folder ----------------------------------------------------------------
+
+// Writes that need an Idempotency-Key, and the key each one must use: derived only from the
+// folder's own variables (no {{$guid}} / {{$timestamp}}), so a repeated Send repeats the
+// same request and the gateway answers with replayed: true instead of a second payment.
+const POS_WRITE_KEYS = {
+  'Start Sale': 'pos-sale:{{pos_order_ref}}',
+  'Start Sale with Items': 'pos-sale-items:{{pos_order_ref}}',
+  'Start Pre-authorisation': 'pos-preauth:{{pos_order_ref}}',
+  'Start Unmatched Refund': 'pos-unmatched:{{pos_order_ref}}',
+  'Cancel Payment': 'pos-cancel:{{pos_payment_id}}',
+  Void: 'pos-void:{{pos_payment_id}}',
+  'Refund Amount': 'pos-refund:{{pos_payment_id}}:{{pos_refund_ref}}',
+  'Refund Items': 'pos-refund-items:{{pos_payment_id}}:{{pos_refund_ref}}',
+  'Close Pre-authorisation': 'pos-preauth-close:{{pos_preauth_payment_id}}',
+  'Cancel Pre-authorisation': 'pos-preauth-cancel:{{pos_preauth_payment_id}}',
+};
+const POS_KEY_REQUIRED = /\/api\/v1\/physical-pos\/payments(\/[^/]+\/reversals)?$/;
+
+function physicalPosFolder(collection) {
+  const folder = collection.item.find((node) => node.name === 'Physical POS');
+  assert.ok(folder, 'the collection has a Physical POS folder');
+  return folder;
+}
+
+function physicalPosEntries(collection) {
+  const folder = physicalPosFolder(collection);
+  return requestItems(folder.item, [folder]);
+}
+
+function idempotencyHeaderOf(item) {
+  const header = (item.request.header || []).find((h) => h.key.toLowerCase() === 'idempotency-key');
+  return header ? header.value : undefined;
+}
+
+test('the Physical POS folder is the same in both payment collections', () => {
+  const [standalone, localSigner] = ['standalone', 'local-signer'].map((profile) => physicalPosFolder(loadCollection(profile)));
+  assert.deepEqual(localSigner, standalone);
+});
+
+test('every pos variable the folder uses is declared in both environment templates', () => {
+  const used = new Set(JSON.stringify(physicalPosFolder(loadCollection('standalone'))).match(/\{\{pos_[a-z_]+\}\}/g).map((token) => token.slice(2, -2)));
+  assert.deepEqual([...used].sort(), Object.keys(POS_ENVIRONMENT).sort());
+  for (const template of Object.values(ENVIRONMENT_TEMPLATES)) {
+    const declared = new Set(JSON.parse(fs.readFileSync(path.join(POSTMAN_DIR, template), 'utf8')).values.map((v) => v.key));
+    for (const name of used) assert.ok(declared.has(name), `${template} declares ${name}`);
+  }
+});
+
+test('Physical POS writes use stable keys and stable references, never a random value', () => {
+  const folder = physicalPosFolder(loadCollection('standalone'));
+  assert.doesNotMatch(JSON.stringify(folder), /\{\{\$(guid|timestamp|isoTimestamp|random[A-Za-z]*)\}\}/, 'no dynamic variable anywhere in the folder');
+  const writes = requestItems(folder.item).filter((e) => e.item.request.method === 'POST');
+  assert.deepEqual(writes.map((e) => e.item.name).sort(), Object.keys(POS_WRITE_KEYS).sort());
+  for (const { item } of writes) {
+    assert.equal(idempotencyHeaderOf(item), POS_WRITE_KEYS[item.name], `${item.name}: Idempotency-Key`);
+    const body = JSON.parse(item.request.body.raw);
+    if (Object.prototype.hasOwnProperty.call(body, 'merchantReference')) {
+      assert.match(body.merchantReference, /^\{\{pos_order_ref\}\}(-[A-Z])?$/, `${item.name}: merchantReference comes from pos_order_ref`);
+    }
+    assert.notEqual(body.allowDuplicateReference, true, `${item.name}: allowDuplicateReference is not sent`);
+  }
+});
+
+test('the Physical POS example responses are fake, masked and in the gateway envelope', () => {
+  const folder = physicalPosFolder(loadCollection('standalone'));
+  for (const { item } of requestItems(folder.item)) {
+    for (const example of item.response || []) {
+      const where = `${item.name} › ${example.name}`;
+      const body = JSON.parse(example.body);
+      assert.equal(body.statusCode, example.code, where);
+      if (example.code < 300) {
+        assert.equal(body.status, 'success', where);
+        assert.ok(body.data && typeof body.data === 'object', where);
+      } else {
+        assert.equal(body.status, 'failure', where);
+        assert.match(body.code, /^(physical_pos(\.[a-z_]+)+|RATE_LIMITED)$/, where);
+        assert.match(body.docsUrl, /^https:\/\/docs\.lunixi\.com(\/tr)?\/physical-pos\/errors#/, where);
+      }
+      // Card data appears only masked; no card number, security code or expiry field.
+      assert.doesNotMatch(example.body, /"(pan|cardNumber|cvv|cvc|expiry|expiryDate|track2)"/i, where);
+      for (const masked of example.body.match(/"cardMasked": "[^"]*"/g) || []) {
+        assert.match(masked, /"cardMasked": "(\d{6}\*{6}\d{4}|\*+\d{4})"/, `${where}: ${masked}`);
+      }
+    }
+  }
+});
+
+for (const profile of ['standalone', 'local-signer']) {
+  test(`${profile}: Physical POS requests are signed, keyed, stable on repeat and chained`, async () => {
+    const { gateway, environment, teardown } = await setUp(profile);
+    try {
+      const collection = loadCollection(profile);
+      const entries = physicalPosEntries(collection);
+      const tests = [];
+      for (const entry of entries) tests.push(...(await runItem(collection, entry, environment)).tests);
+      const first = gateway.received.slice();
+      // A second pass is what pressing Send again does: same keys and same bodies.
+      for (const entry of entries) tests.push(...(await runItem(collection, entry, environment)).tests);
+      const second = gateway.received.slice(first.length);
+
+      assert.equal(first.length, entries.length, 'every request of the folder reached the stand-in');
+      for (const hit of [...first, ...second]) {
+        const where = `${hit.method} ${hit.url}`;
+        assert.equal(hit.verdict, 'OK', `${where}: the API-key signature must verify`);
+        const pathOnly = hit.url.split('?')[0];
+        if (hit.method === 'POST' && POS_KEY_REQUIRED.test(pathOnly)) {
+          assert.match(String(hit.idempotencyKey), IDEMPOTENCY_KEY_FORMAT, `${where}: Idempotency-Key is required and well formed`);
+        }
+        if (hit.method === 'GET') assert.equal(hit.raw, '', `${where}: no body`);
+      }
+      first.forEach((hit, index) => {
+        assert.equal(second[index].url, hit.url, `${hit.url}: same target on repeat`);
+        assert.equal(second[index].idempotencyKey, hit.idempotencyKey, `${hit.url}: same Idempotency-Key on repeat`);
+        assert.equal(second[index].raw, hit.raw, `${hit.url}: same body on repeat`);
+      });
+
+      const sale = first.find((hit) => hit.method === 'POST' && hit.url === '/api/v1/physical-pos/payments' && JSON.parse(hit.raw).operation === 'SALE');
+      assert.equal(JSON.parse(sale.raw).merchantReference, POS_ENVIRONMENT.pos_order_ref, 'the sale reference is pos_order_ref');
+      assert.equal(sale.idempotencyKey, `pos-sale:${POS_ENVIRONMENT.pos_order_ref}`);
+      // The ids the answers carry are used by the requests after them.
+      assert.ok(first.some((hit) => hit.method === 'POST' && JSON.parse(hit.raw).target && JSON.parse(hit.raw).target.deviceId === POS_IDS.device), 'payments start on the listed device');
+      assert.ok(first.some((hit) => hit.url === `/api/v1/physical-pos/payments/${POS_IDS.sale}/reversals` && JSON.parse(hit.raw).operation === 'VOID'), 'Void reverses the started sale');
+      assert.ok(first.some((hit) => hit.url === `/api/v1/physical-pos/payments/${POS_IDS.preauth}/reversals` && JSON.parse(hit.raw).operation === 'PREAUTH_CLOSE'), 'Close Pre-authorisation uses the started pre-authorisation');
+      assert.ok(first.some((hit) => hit.url === `/api/v1/physical-pos/payments/${POS_IDS.reversal}`), 'Get Reversal reads the started reversal');
+      assert.ok(!first.some((hit) => hit.url.includes(POS_IDS.unmatched)), 'an unmatched refund is not chained');
+      assert.deepEqual(tests.filter((t) => t.error), [], "the folder's own assertions pass");
+    } finally {
+      await teardown();
+    }
+  });
+
+  test(`${profile}: a pinned pos id is kept and Physical POS answers leave payment_id alone`, () => {
+    const collection = loadCollection(profile);
+    const folder = physicalPosFolder(collection);
+    const runTests = (method, url, code, envelope, values) => {
+      const environment = createEnvironment({ payment_id: 'pi_original', ...POS_ENVIRONMENT, ...values });
+      const pm = {
+        test() {},
+        environment: { get: (k) => environment.store.get(k), set: (k, v) => environment.store.set(k, v) },
+        request: { method, url: { toString: () => url } },
+        response: { code, json: () => envelope },
+      };
+      for (const node of [collection, folder]) {
+        // eslint-disable-next-line no-new-func
+        new Function(...SANDBOX_GLOBALS, scriptOf(node, 'test'))(...SANDBOX_GLOBALS.map((name) => (name === 'pm' ? pm : undefined)));
+      }
+      return environment.store;
+    };
+    const base = 'https://api-gateway.lunixi.com/api/v1/physical-pos';
+    const started = (operation) => ({ data: { payment: { paymentId: `pay_${operation}`, operation }, replayed: false } });
+    const sale = runTests('POST', `${base}/payments`, 202, started('SALE'), {});
+    assert.equal(sale.get('pos_payment_id'), 'pay_SALE');
+    assert.equal(sale.get('payment_id'), 'pi_original', 'a Physical POS answer is not a gateway payment');
+    const preauth = runTests('POST', `${base}/payments`, 202, started('PREAUTH_OPEN'), { pos_payment_id: 'pay_sale_kept' });
+    assert.equal(preauth.get('pos_preauth_payment_id'), 'pay_PREAUTH_OPEN');
+    assert.equal(preauth.get('pos_payment_id'), 'pay_sale_kept', 'a pre-authorisation does not replace the sale');
+    const unmatched = runTests('POST', `${base}/payments`, 202, started('REFUND_UNMATCHED'), { pos_payment_id: 'pay_sale_kept' });
+    assert.equal(unmatched.get('pos_payment_id'), 'pay_sale_kept', 'an unmatched refund is not chained');
+    const rejected = runTests('POST', `${base}/payments`, 409, { code: 'physical_pos.payment.device_busy', data: {} }, { pos_payment_id: 'pay_sale_kept' });
+    assert.equal(rejected.get('pos_payment_id'), 'pay_sale_kept', 'a rejected start changes nothing');
+    const reversal = runTests('POST', `${base}/payments/pay_sale_kept/reversals`, 202, started('VOID'), { pos_payment_id: 'pay_sale_kept' });
+    assert.equal(reversal.get('pos_reversal_payment_id'), 'pay_VOID');
+    assert.equal(reversal.get('pos_payment_id'), 'pay_sale_kept', 'a reversal does not replace the root');
+    const page = { data: { items: [{ id: 'dev_listed', paymentId: 'pay_listed' }] } };
+    const pinned = runTests('GET', `${base}/devices?limit=25`, 200, page, { pos_device_id: 'dev_pinned' });
+    assert.equal(pinned.get('pos_device_id'), 'dev_pinned', 'a value set by the user is not overwritten');
+    const filled = runTests('GET', `${base}/devices?limit=25`, 200, page, { pos_device_id: '' });
+    assert.equal(filled.get('pos_device_id'), 'dev_listed');
+    const listed = runTests('GET', `${base}/payments?limit=25`, 200, page, { pos_payment_id: '' });
+    assert.equal(listed.get('pos_payment_id'), 'pay_listed');
+  });
+}
+test('the Physical POS Void request shows the settled-payment answer: refund instead', () => {
+  for (const profile of ['standalone', 'local-signer']) {
+    const payments = physicalPosFolder(loadCollection(profile)).item.find((node) => node.name === 'Payments');
+    const voidItem = payments.item.find((node) => node.name === 'Void');
+    const settled = (voidItem.response || []).find((example) => JSON.parse(example.body).code === 'physical_pos.payment.void_after_settlement');
+    assert.ok(settled, `${profile}: Void has a void_after_settlement example`);
+    assert.equal(settled.code, 409, profile);
+    assert.deepEqual(JSON.parse(settled.body).details, { allowedOperation: 'REFUND' }, profile);
+    assert.equal(JSON.parse(settled.originalRequest.body.raw).operation, 'VOID', profile);
+    assert.match(voidItem.request.description, /void_after_settlement/, `${profile}: the description names the code`);
+  }
+});
+
+// --- Physical POS folder lock (end) ---
+test('collection money bodies preserve the large exact minor string', () => {
+  for (const profile of ['standalone', 'local-signer']) {
+    for (const { item } of requestItems(loadCollection(profile).item)) {
+      if (!item.request.body?.raw?.includes('{{amount_minor}}')) continue;
+      const raw = item.request.body.raw.replace(/\{\{amount_minor\}\}/g, '9007199254740993').replace(/\{\{[^{}]+\}\}/g, '1');
+      const body = JSON.parse(raw);
+      if (body.amount !== undefined) assert.equal(body.amount, '9007199254740993');
+      if (body.amountMinor !== undefined) assert.equal(body.amountMinor, '9007199254740993');
+      for (const line of body.basketItems || []) assert.equal(line.price, '9007199254740993');
+    }
+  }
+});
+
+test('Physical POS request and saved response examples use canonical string money', () => {
+  function check(value, label) {
+    if (Array.isArray(value)) { value.forEach((entry, i) => check(entry, `${label}[${i}]`)); return; }
+    if (!value || typeof value !== 'object') return;
+    for (const [key, entry] of Object.entries(value)) {
+      if (key.endsWith('Minor') && entry !== null) {
+        assert.equal(typeof entry, 'string', `${label}.${key} is money text`);
+        assert.match(entry, /^(0|-?[1-9][0-9]*)$/, `${label}.${key} is canonical`);
+      } else if (entry && typeof entry === 'object') check(entry, `${label}.${key}`);
+    }
+  }
+  for (const profile of ['standalone', 'local-signer']) {
+    for (const { item } of physicalPosEntries(loadCollection(profile))) {
+      if (item.request.body?.raw) check(JSON.parse(item.request.body.raw), item.name);
+      for (const response of item.response || []) {
+        if (response.body) check(JSON.parse(response.body), `${item.name}.response`);
+      }
+    }
+  }
+});

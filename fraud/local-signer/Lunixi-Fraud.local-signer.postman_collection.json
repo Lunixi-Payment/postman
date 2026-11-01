@@ -156,7 +156,7 @@
             "description": "Server-to-server decision. `channel: standalone_api` is the external lane.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"channel\": \"standalone_api\",\n  \"surface\": \"transaction\",\n  \"stage\": \"pre_authorization\",\n  \"operationKind\": \"card_sale\",\n  \"authModeRequested\": \"2d\",\n  \"productContext\": \"direct_api\",\n  \"integrationMode\": \"standalone\",\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"subjectType\": \"card_payment\",\n  \"subjectId\": \"{{transaction_ref}}\",\n  \"payment\": {\n    \"amount\": 25000,\n    \"currency\": \"TRY\",\n    \"is3D\": false\n  },\n  \"customer\": {\n    \"email\": \"ada@example.com\",\n    \"isNew\": true\n  }\n}"
+              "raw": "{\n  \"channel\": \"standalone_api\",\n  \"surface\": \"transaction\",\n  \"stage\": \"pre_authorization\",\n  \"operationKind\": \"card_sale\",\n  \"authModeRequested\": \"2d\",\n  \"productContext\": \"direct_api\",\n  \"integrationMode\": \"standalone\",\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"subjectType\": \"card_payment\",\n  \"subjectId\": \"{{transaction_ref}}\",\n  \"payment\": {\n    \"amount\": \"25000\",\n    \"currency\": \"TRY\",\n    \"is3D\": false\n  },\n  \"customer\": {\n    \"email\": \"ada@example.com\",\n    \"isNew\": true\n  }\n}"
             }
           },
           "event": [
@@ -193,7 +193,7 @@
             "description": "Your own payment form with the Lunixi browser SDK. `subjectId` must equal the SDK session's subjectId, otherwise the decision records `assertion_subject_mismatch`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"channel\": \"merchant_form\",\n  \"surface\": \"form_gate\",\n  \"stage\": \"pre_authorization\",\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"subjectId\": \"{{subject_id}}\",\n  \"identityAssertion\": \"{{identity_assertion}}\",\n  \"payment\": {\n    \"amount\": 25000,\n    \"currency\": \"TRY\"\n  }\n}"
+              "raw": "{\n  \"channel\": \"merchant_form\",\n  \"surface\": \"form_gate\",\n  \"stage\": \"pre_authorization\",\n  \"transactionRef\": \"{{transaction_ref}}\",\n  \"subjectId\": \"{{subject_id}}\",\n  \"identityAssertion\": \"{{identity_assertion}}\",\n  \"payment\": {\n    \"amount\": \"25000\",\n    \"currency\": \"TRY\"\n  }\n}"
             }
           },
           "event": [
