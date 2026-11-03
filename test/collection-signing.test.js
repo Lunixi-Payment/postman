@@ -915,7 +915,12 @@ const POS_IDS = {
   reversal: '01900000-0000-7000-8000-000000000504',
   listed: '01900000-0000-7000-8000-000000000505',
   deviceKey: 'pdk_AAAAAAAAAAAAAAAAAAAAAAAA',
+  settlementRun: '01900000-0000-7000-8000-0000000005e1',
+  store: '51000000-0000-4000-8000-000000000001',
+  terminal: '52000000-0000-4000-8000-000000000001',
+  terminalProvider: '53000000-0000-4000-8000-000000000001',
 };
+const POS_POLICY = { scopeType: 'ACCOUNT', storeId: null, deviceId: null, active: true, mode: 'MANUAL', rowVersion: 1 };
 function physicalPosReply(method, route, raw) {
   const lastPage = { hasMore: false, nextCursor: null, totalCount: null };
   let body = {};
@@ -931,6 +936,32 @@ function physicalPosReply(method, route, raw) {
   }
   if (method === 'POST' && /^\/devices\/[^/]+\/activation-code\/revoke$/.test(route)) {
     return { status: 200, data: { deviceId: route.split('/')[2], revokedAt: '2026-01-02T10:00:00.000Z', revokeReason: body.reasonCode } };
+  }
+  // End of day and policy (contract: gateway physical-pos-settlements.service.ts / .mapper.ts).
+  const settlementStart = /^\/devices\/([^/]+)\/settlement$/.exec(route);
+  if (method === 'POST' && settlementStart) {
+    return { status: 202, data: { run: { runId: POS_IDS.settlementRun, deviceId: settlementStart[1], runStatus: 'STARTED' }, replayed: false } };
+  }
+  if (method === 'GET' && route === '/settlement-runs') return { status: 200, data: { items: [{ runId: POS_IDS.settlementRun }] }, pageInfo: lastPage };
+  if (method === 'GET' && /^\/settlement-runs\/[^/]+$/.test(route)) return { status: 200, data: { run: { runId: route.split('/')[2] } } };
+  if (/^\/devices\/[^/]+\/settlement-policy\/effective$/.test(route) && method === 'GET') {
+    return { status: 200, data: { effective: { deviceId: route.split('/')[2], sourceScopeType: 'ACCOUNT', policy: POS_POLICY } } };
+  }
+  if (/^(\/(stores|devices)\/[^/]+)?\/settlement-policy$/.test(route) && ['GET', 'PUT', 'DELETE'].includes(method)) {
+    return { status: 200, data: { policy: POS_POLICY } };
+  }
+  // Terminals and their provider rows (contract: gateway physical-pos-terminals.service.ts / .mapper.ts).
+  if (method === 'GET' && route === '/stores') return { status: 200, data: { items: [{ id: POS_IDS.store }] }, pageInfo: lastPage };
+  if (method === 'GET' && route === '/terminals') return { status: 200, data: { items: [{ id: POS_IDS.terminal }] }, pageInfo: lastPage };
+  const providers = /^\/terminals\/([^/]+)\/providers$/.exec(route);
+  if (providers && method === 'GET') {
+    return { status: 200, data: { items: [{ id: POS_IDS.terminalProvider, terminalId: providers[1], providerStatus: 'ACTIVE', rowVersion: 1 }] }, pageInfo: lastPage };
+  }
+  if (providers && method === 'POST') {
+    return { status: 201, data: { provider: { id: POS_IDS.terminalProvider, terminalId: providers[1], vendorAccountId: body.vendorAccountId, providerStatus: 'ACTIVE', rowVersion: 1 }, replayed: false } };
+  }
+  if (method === 'PATCH' && /^\/terminal-providers\/[^/]+$/.test(route)) {
+    return { status: 200, data: { provider: { id: route.split('/')[2], label: body.label ?? null, providerStatus: body.status || 'ACTIVE', rowVersion: 2 } } };
   }
   if (method === 'POST' && route === '/payments') {
     const ids = { SALE: POS_IDS.sale, PREAUTH_OPEN: POS_IDS.preauth, REFUND_UNMATCHED: POS_IDS.unmatched };
@@ -957,8 +988,9 @@ function physicalPosReply(method, route, raw) {
   return { status: 200, data: {} };
 }
 // The Physical POS folder chains pos_device_id, pos_device_key_id, pos_payment_id,
-// pos_preauth_payment_id and pos_reversal_payment_id itself; pos_order_ref and pos_refund_ref
-// are filled by the user.
+// pos_preauth_payment_id, pos_reversal_payment_id, pos_settlement_run_id, pos_store_id,
+// pos_terminal_id and pos_terminal_provider_id itself; pos_order_ref, pos_refund_ref,
+// pos_settlement_ref, pos_provider_ref and pos_vendor_account_id are filled by the user.
 const POS_ENVIRONMENT = {
   pos_device_id: '',
   pos_device_key_id: '',
@@ -967,6 +999,13 @@ const POS_ENVIRONMENT = {
   pos_reversal_payment_id: '',
   pos_order_ref: 'ORD-LOCK-0001',
   pos_refund_ref: 'RF-LOCK-0001',
+  pos_settlement_run_id: '',
+  pos_settlement_ref: 'EOD-LOCK-0001',
+  pos_store_id: '',
+  pos_terminal_id: '',
+  pos_terminal_provider_id: '',
+  pos_vendor_account_id: '54000000-0000-4000-8000-000000000001',
+  pos_provider_ref: 'PRV-LOCK-0001',
 };
 // --- Physical POS stand-in (end) ---
 
@@ -2652,8 +2691,11 @@ const POS_WRITE_KEYS = {
   'Refund Items': 'pos-refund-items:{{pos_payment_id}}:{{pos_refund_ref}}',
   'Close Pre-authorisation': 'pos-preauth-close:{{pos_preauth_payment_id}}',
   'Cancel Pre-authorisation': 'pos-preauth-cancel:{{pos_preauth_payment_id}}',
+  'Start End-of-Day': 'pos-settlement:{{pos_device_id}}:{{pos_settlement_ref}}',
+  'Add Terminal Provider': 'pos-provider:{{pos_terminal_id}}:{{pos_provider_ref}}',
+  'Start Meal Card Sale': 'pos-meal-sale:{{pos_order_ref}}',
 };
-const POS_KEY_REQUIRED = /\/api\/v1\/physical-pos\/payments(\/[^/]+\/reversals)?$/;
+const POS_KEY_REQUIRED = /\/api\/v1\/physical-pos\/(payments(\/[^/]+\/reversals)?|devices\/[^/]+\/settlement|terminals\/[^/]+\/providers)$/;
 // Device identity writes take no Idempotency-Key (the gateway route has none).
 const POS_KEYLESS_WRITES = ['Revoke Device Key', 'Revert Device Enrollment', 'Revoke Activation Code'];
 
@@ -2775,6 +2817,34 @@ for (const profile of ['standalone', 'local-signer']) {
       for (const hit of first.filter((h) => /\/devices\/[^/]+\/(keys\/[^/]+\/(revoke|revert-enrollment)|activation-code\/revoke)$/.test(h.url))) {
         assert.equal(hit.idempotencyKey, undefined, `${hit.url}: no Idempotency-Key`);
       }
+      const settlement = first.find((hit) => hit.method === 'POST' && hit.url === `/api/v1/physical-pos/devices/${POS_IDS.device}/settlement`);
+      assert.ok(settlement, 'Start End-of-Day uses the listed device');
+      assert.equal(settlement.raw, '{}', 'Start End-of-Day sends an empty object');
+      assert.equal(settlement.idempotencyKey, `pos-settlement:${POS_IDS.device}:${POS_ENVIRONMENT.pos_settlement_ref}`);
+      assert.ok(first.some((hit) => hit.method === 'GET' && hit.url === `/api/v1/physical-pos/settlement-runs/${POS_IDS.settlementRun}`), 'Get End-of-Day Run reads the started run');
+      for (const level of ['', `/stores/${POS_IDS.store}`, `/devices/${POS_IDS.device}`]) {
+        for (const method of ['GET', 'PUT', 'DELETE']) {
+          assert.ok(first.some((hit) => hit.method === method && hit.url === `/api/v1/physical-pos${level}/settlement-policy`), `${method} ${level || 'account'} settlement policy`);
+        }
+      }
+      for (const hit of first.filter((h) => /\/settlement-policy$/.test(h.url) && h.method !== 'GET')) {
+        assert.equal(hit.idempotencyKey, undefined, `${hit.method} ${hit.url}: no Idempotency-Key`);
+      }
+      const provider = first.find((hit) => hit.method === 'POST' && hit.url === `/api/v1/physical-pos/terminals/${POS_IDS.terminal}/providers`);
+      assert.ok(provider, 'Add Terminal Provider uses the listed terminal');
+      assert.equal(provider.idempotencyKey, `pos-provider:${POS_IDS.terminal}:${POS_ENVIRONMENT.pos_provider_ref}`);
+      assert.equal(JSON.parse(provider.raw).vendorAccountId, POS_ENVIRONMENT.pos_vendor_account_id);
+      const patched = first.find((hit) => hit.method === 'PATCH' && hit.url === `/api/v1/physical-pos/terminal-providers/${POS_IDS.terminalProvider}`);
+      assert.ok(patched, 'Update Terminal Provider uses the listed provider row');
+      assert.ok(Number.isInteger(JSON.parse(patched.raw).rowVersion), 'Update Terminal Provider sends rowVersion');
+      assert.equal(patched.idempotencyKey, undefined, 'Update Terminal Provider takes no Idempotency-Key');
+      const meal = first.find((hit) => hit.method === 'POST' && hit.url === '/api/v1/physical-pos/payments' && JSON.parse(hit.raw).instrument === 'MEAL_CARD');
+      assert.ok(meal, 'Start Meal Card Sale reaches the payments route');
+      assert.deepEqual(JSON.parse(meal.raw), {
+        operation: 'SALE', target: { deviceId: POS_IDS.device }, amountMinor: '4450', currency: 'TRY', instrument: 'MEAL_CARD',
+        interaction: 'CODE_DISPLAY', terminalProviderId: POS_IDS.terminalProvider, merchantReference: `${POS_ENVIRONMENT.pos_order_ref}-M`,
+      }, 'the meal card sale uses the listed device and provider row');
+      assert.equal(meal.idempotencyKey, `pos-meal-sale:${POS_ENVIRONMENT.pos_order_ref}`);
       assert.deepEqual(tests.filter((t) => t.error), [], "the folder's own assertions pass");
     } finally {
       await teardown();

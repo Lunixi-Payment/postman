@@ -6246,7 +6246,7 @@
     },
     {
       "name": "Physical POS",
-      "description": "Physical POS payments (`/api/v1/physical-pos`, product `PHYSICAL_POS`): start a sale, pre-authorisation or unmatched refund on the POS device in your store, reverse it, cancel it before it reaches the device, and read payments, transactions, reports and end-of-day records. The card is read on the device; the API never takes card data.\n\n- **API key only.** Every route accepts the per-request Ed25519 signature only, reads included; the collection signs every gateway request. Unsigned is `401 AUTH_HEADERS_MISSING`.\n- **The key needs** the `PHYSICAL_POS` product (`403 PRODUCT_NOT_ENABLED` otherwise) and `physical_pos:payments` to start, reverse and cancel payments. Reads take `physical_pos:view` **or** `physical_pos:payments`; `List Devices` needs `physical_pos:view`. `physical_pos:manage` cannot make payments (`403 API_INSUFFICIENT_SCOPE`). `physical_pos:payments` is not added to existing keys automatically.\n- **The key decides the environment.** A TEST key (`mk_test_…`) only reads: start, reversal and cancel get `403 physical_pos.environment.test_key_read_only`, and its lists are empty. Sending `environment` is `400 physical_pos.input.environment_invalid`; `merchantId` or any other field the route does not take is `400 VALIDATION_ERROR`.\n- **Asynchronous.** Start and reversal return `202 Accepted` with `paymentStatus: NOT_STARTED` (a repeat with the same key `200`, `replayed: true`). The outcome comes with the `physical_pos.payment.*` webhooks (subscribe a `PHYSICAL_POS` endpoint to `physical_pos.*`) or `Get Payment`.\n- **Same key on retry.** `Idempotency-Key` (required on start and reversals) and `merchantReference` are built from `pos_order_ref`, `pos_payment_id`, `pos_preauth_payment_id` and `pos_refund_ref` — never from a random value. After a timeout or a `5xx`, press Send again without changing anything: the same key and body come back as `200`, `replayed: true` if the payment was opened, and no second payment is created. For a new sale change `pos_order_ref`; for a further refund on the same sale change `pos_refund_ref`. Always use the same `merchantReference` for the same sale, and do not send `allowDuplicateReference` after `409 physical_pos.payment.previous_outcome_unknown`.\n- **`UNKNOWN` means money may have been taken: never start that payment again.** `MANUAL_REVIEW` is resolved in the dashboard only.\n- **Device model support.** Partial refunds, several refunds on one sale, partial pre-authorisation closes and item refunds need the device model to support them (`422 physical_pos.payment.operation_unsupported`, `partial_amount_unsupported` / `itemized_unsupported`).\n- **Money is in minor units:** `4500` is 45.00 TRY. JSON integers in the API; strings in webhook payloads.\n- **Limit:** 120 payment writes per minute per API key (start, reversal and cancel together); `429 RATE_LIMITED` with `Retry-After`. Reads are not limited. Retry `503` errors with backoff and a limited number of attempts.\n- **Paging:** rows are `data.items`, paging is the top-level `pageInfo` (`hasMore`, `nextCursor`; `totalCount` is always `null`).\n- Starting a payment runs when a payment capability definition exists for the target device's model; otherwise `422 physical_pos.payment.operation_unsupported` (`details.reason`: `capability_undefined`) and no payment is created. Fiscal document webhook events are not produced at the moment.\n- **Device identity** (`Device Identity` folder): `List Device Keys` needs `physical_pos:view`; `Revoke Device Key`, `Revert Device Enrollment` and `Revoke Activation Code` need `physical_pos:identity` and take no `Idempotency-Key`. Activation codes are issued in the dashboard only. `List Device Keys` fills `pos_device_key_id`.\n- Run `List Devices` first (fills `pos_device_id`). `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start Pre-authorisation` stores `pos_preauth_payment_id`; the reversal requests store the child in `pos_reversal_payment_id` (`Get Reversal`).\n\nError codes and what to do: https://docs.lunixi.com/physical-pos/errors",
+      "description": "Physical POS payments (`/api/v1/physical-pos`, product `PHYSICAL_POS`): start a sale, pre-authorisation or unmatched refund on the POS device in your store, reverse it, cancel it before it reaches the device, and read payments, transactions, reports and end-of-day records. The card is read on the device; the API never takes card data.\n\n- **API key only.** Every route accepts the per-request Ed25519 signature only, reads included; the collection signs every gateway request. Unsigned is `401 AUTH_HEADERS_MISSING`.\n- **The key needs** the `PHYSICAL_POS` product (`403 PRODUCT_NOT_ENABLED` otherwise) and `physical_pos:payments` to start, reverse and cancel payments. Reads take `physical_pos:view` **or** `physical_pos:payments`; `List Devices` needs `physical_pos:view`. `physical_pos:manage` cannot make payments (`403 API_INSUFFICIENT_SCOPE`). `physical_pos:payments` is not added to existing keys automatically.\n- **The key decides the environment.** A TEST key (`mk_test_…`) only reads: start, reversal and cancel get `403 physical_pos.environment.test_key_read_only`, and its lists are empty. Sending `environment` is `400 physical_pos.input.environment_invalid`; `merchantId` or any other field the route does not take is `400 VALIDATION_ERROR`.\n- **Asynchronous.** Start and reversal return `202 Accepted` with `paymentStatus: NOT_STARTED` (a repeat with the same key `200`, `replayed: true`). The outcome comes with the `physical_pos.payment.*` webhooks (subscribe a `PHYSICAL_POS` endpoint to `physical_pos.*`) or `Get Payment`.\n- **Same key on retry.** `Idempotency-Key` (required on start and reversals) and `merchantReference` are built from `pos_order_ref`, `pos_payment_id`, `pos_preauth_payment_id` and `pos_refund_ref` — never from a random value. After a timeout or a `5xx`, press Send again without changing anything: the same key and body come back as `200`, `replayed: true` if the payment was opened, and no second payment is created. For a new sale change `pos_order_ref`; for a further refund on the same sale change `pos_refund_ref`. Always use the same `merchantReference` for the same sale, and do not send `allowDuplicateReference` after `409 physical_pos.payment.previous_outcome_unknown`.\n- **`UNKNOWN` means money may have been taken: never start that payment again.** `MANUAL_REVIEW` is resolved in the dashboard only.\n- **Device model support.** Partial refunds, several refunds on one sale, partial pre-authorisation closes and item refunds need the device model to support them (`422 physical_pos.payment.operation_unsupported`, `partial_amount_unsupported` / `itemized_unsupported`).\n- **Money is in minor units:** `4500` is 45.00 TRY. JSON integers in the API; strings in webhook payloads.\n- **Limit:** 120 payment writes per minute per API key (start, reversal and cancel together); `429 RATE_LIMITED` with `Retry-After`. Reads are not limited. Retry `503` errors with backoff and a limited number of attempts.\n- **Paging:** rows are `data.items`, paging is the top-level `pageInfo` (`hasMore`, `nextCursor`; `totalCount` is always `null`).\n- Starting a payment runs when a payment capability definition exists for the target device's model; otherwise `422 physical_pos.payment.operation_unsupported` (`details.reason`: `capability_undefined`) and no payment is created. Fiscal document webhook events are not produced at the moment.\n- **Device identity** (`Device Identity` folder): `List Device Keys` needs `physical_pos:view`; `Revoke Device Key`, `Revert Device Enrollment` and `Revoke Activation Code` need `physical_pos:identity` and take no `Idempotency-Key`. Activation codes are issued in the dashboard only. `List Device Keys` fills `pos_device_key_id`.\n- **End of day** (`End of Day` folder): `Start End-of-Day` needs `physical_pos:payments` and an `Idempotency-Key` built from `pos_device_id` and `pos_settlement_ref`; the policy reads need `physical_pos:view`, the policy writes `physical_pos:manage`. A store or device setting replaces the level above it entirely.\n- **Meal cards** (`Terminal Providers` folder): add the provider's merchant / terminal / product code to a terminal, then start a `SALE` with `instrument: MEAL_CARD`, `interaction` (`INSTRUMENT_READ` | `CODE_DISPLAY`) and, when there are several rows, `terminalProviderId` (`Start Meal Card Sale`). The QR / short code is shown on the device only.\n- Run `List Devices` first (fills `pos_device_id`). `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start Pre-authorisation` stores `pos_preauth_payment_id`; the reversal requests store the child in `pos_reversal_payment_id` (`Get Reversal`).\n\nError codes and what to do: https://docs.lunixi.com/physical-pos/errors",
       "event": [
         {
           "listen": "test",
@@ -6255,9 +6255,10 @@
             "exec": [
               "// Chains the ids the next requests use. A started payment or reversal is always stored",
               "// (a sale in pos_payment_id, a pre-authorisation in pos_preauth_payment_id, a reversal in",
-              "// pos_reversal_payment_id); a list fills its variable only when it is empty (set one",
-              "// yourself to pin it). The Idempotency-Key and merchantReference come from pos_order_ref",
-              "// and pos_refund_ref, so a repeated Send repeats the same request.",
+              "// pos_reversal_payment_id, a started end-of-day in pos_settlement_run_id); a list fills its",
+              "// variable only when it is empty (set one yourself to pin it). The Idempotency-Key and",
+              "// merchantReference come from pos_order_ref, pos_refund_ref, pos_settlement_ref and",
+              "// pos_provider_ref, so a repeated Send repeats the same request.",
               "let posEnvelope = {};",
               "try { posEnvelope = pm.response.json(); } catch (e) { posEnvelope = {}; }",
               "const posPayload = posEnvelope && typeof posEnvelope.data === 'object' && posEnvelope.data !== null",
@@ -6273,11 +6274,19 @@
               "if (posWritten && posPayment && /\\/api\\/v1\\/physical-pos\\/payments\\/[^/]+\\/reversals$/.test(posRoute)) {",
               "  pm.environment.set('pos_reversal_payment_id', posPayment.paymentId);",
               "}",
+              "const posRun = posPayload.run && typeof posPayload.run.runId === 'string' ? posPayload.run : null;",
+              "if (posWritten && posRun && /\\/api\\/v1\\/physical-pos\\/devices\\/[^/]+\\/settlement$/.test(posRoute)) {",
+              "  pm.environment.set('pos_settlement_run_id', posRun.runId);",
+              "}",
               "const posFirstRow = Array.isArray(posPayload.items) && posPayload.items.length > 0 ? posPayload.items[0] : null;",
               "const posListed = [",
               "  [/\\/api\\/v1\\/physical-pos\\/devices$/, 'id', 'pos_device_id'],",
               "  [/\\/api\\/v1\\/physical-pos\\/payments$/, 'paymentId', 'pos_payment_id'],",
               "  [/\\/api\\/v1\\/physical-pos\\/devices\\/[^/]+\\/keys$/, 'keyId', 'pos_device_key_id'],",
+              "  [/\\/api\\/v1\\/physical-pos\\/settlement-runs$/, 'runId', 'pos_settlement_run_id'],",
+              "  [/\\/api\\/v1\\/physical-pos\\/stores$/, 'id', 'pos_store_id'],",
+              "  [/\\/api\\/v1\\/physical-pos\\/terminals$/, 'id', 'pos_terminal_id'],",
+              "  [/\\/api\\/v1\\/physical-pos\\/terminals\\/[^/]+\\/providers$/, 'id', 'pos_terminal_provider_id'],",
               "];",
               "for (const [route, field, variable] of posListed) {",
               "  if (pm.request.method === 'GET' && route.test(posRoute) && posFirstRow && typeof posFirstRow[field] === 'string' && !pm.environment.get(variable)) {",
@@ -7570,6 +7579,750 @@
                     }
                   ],
                   "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n    \"revokedAt\": \"2026-01-02T10:00:00.000Z\",\n    \"revokeReason\": \"MERCHANT_REVOKED\"\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "End of Day",
+          "item": [
+            {
+              "name": "Start End-of-Day",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start End-of-Day: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-settlement:{{pos_device_id}}:{{pos_settlement_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement",
+                "description": "Starts end-of-day (batch close) on `pos_device_id`. End-of-day cannot be undone. The answer is `202 Accepted` with the `run`: the device reports the signed result later — follow it with `Get End-of-Day Run` or `List End-of-Day Records`. Stores `data.run.runId` in `pos_settlement_run_id`.\n\nThe body is an empty JSON object (any field is `400`).\n\n**Idempotency-Key:** `pos-settlement:{{pos_device_id}}:{{pos_settlement_ref}}` (required). Pressing Send again sends the same key: the existing run comes back with `200`, `replayed: true`. For the next end-of-day change `pos_settlement_ref` (for example the business day).\n\n- `409 physical_pos.payment.device_busy`: a payment or another end-of-day is running; retry after `details.retryAfterSeconds`.\n- `422 physical_pos.payment.operation_unsupported` (`settlement_unsupported`): the device model cannot take end-of-day from the server.\n\n**Scope:** `physical_pos:payments`. 30 end-of-day writes per minute per API key (shared with the policy writes). A TEST key gets `403 physical_pos.environment.test_key_read_only`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Accepted",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-settlement:{{pos_device_id}}:{{pos_settlement_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Accepted",
+                  "code": 202,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"run\": {\n      \"runId\": \"01900000-0000-7000-8000-0000000005e1\",\n      \"deviceId\": \"50000000-0000-4000-8000-000000000001\",\n      \"environment\": \"LIVE\",\n      \"source\": \"MANUAL_API\",\n      \"runStatus\": \"STARTED\",\n      \"reason\": null,\n      \"businessDate\": \"2026-01-02\",\n      \"commandId\": \"01900000-0000-7000-8000-0000000005c1\",\n      \"commandStatus\": \"QUEUED\",\n      \"deliveryPath\": \"PUSH\",\n      \"resultState\": \"PENDING\",\n      \"attemptCount\": 1,\n      \"nextAttemptAt\": null,\n      \"windowEndsAt\": null,\n      \"resultLineCount\": 0,\n      \"completedAt\": null,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 202,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "List End-of-Day Runs",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List End-of-Day Runs: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/settlement-runs?limit=25",
+                "description": "End-of-day runs started by Lunixi (from the API, the dashboard or a schedule), newest first. Fills `pos_settlement_run_id` with the first row when the variable is empty. The device's result lines are in `List End-of-Day Records`.\n\n**Filters:** `limit` (1–100), `cursor`, `deviceId`, `source` (`MANUAL_API` | `MANUAL_PANEL` | `SCHEDULED`), `runStatus` (`PENDING` | `STARTED` | `SKIPPED` | `FAILED`), `createdFrom` / `createdTo` (ISO-8601 UTC ending with `Z`), `includeTotal` (first page only).\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": []
+            },
+            {
+              "name": "Get End-of-Day Run",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get End-of-Day Run: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/settlement-runs/{{pos_settlement_run_id}}",
+                "description": "One run with its command status and result state: `runId`, `deviceId`, `environment`, `source`, `runStatus`, `reason`, `businessDate`, `commandId`, `commandStatus`, `deliveryPath`, `resultState` (`PENDING` | `COMPLETED` | `NOT_COMPLETED`), `attemptCount`, `nextAttemptAt`, `windowEndsAt`, `resultLineCount`, `completedAt`, `createdAt`, `updatedAt`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
+              },
+              "response": [
+                {
+                  "name": "Run",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/settlement-runs/{{pos_settlement_run_id}}"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"run\": {\n      \"runId\": \"01900000-0000-7000-8000-0000000005e1\",\n      \"deviceId\": \"50000000-0000-4000-8000-000000000001\",\n      \"environment\": \"LIVE\",\n      \"source\": \"MANUAL_API\",\n      \"runStatus\": \"STARTED\",\n      \"reason\": null,\n      \"businessDate\": \"2026-01-02\",\n      \"commandId\": \"01900000-0000-7000-8000-0000000005c1\",\n      \"commandStatus\": \"QUEUED\",\n      \"deliveryPath\": \"PUSH\",\n      \"resultState\": \"PENDING\",\n      \"attemptCount\": 1,\n      \"nextAttemptAt\": null,\n      \"windowEndsAt\": null,\n      \"resultLineCount\": 0,\n      \"completedAt\": null,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n    }\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Account Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Account Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/settlement-policy",
+                "description": "The account-level end-of-day policy. `active: false` means nothing is stored at this level (the default `MANUAL` applies).\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": [
+                {
+                  "name": "Policy",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/settlement-policy"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"policy\": {\n      \"scopeType\": \"ACCOUNT\",\n      \"storeId\": null,\n      \"deviceId\": null,\n      \"active\": true,\n      \"mode\": \"SCHEDULED\",\n      \"scheduleTime\": \"23:30\",\n      \"timeZone\": \"Europe/Istanbul\",\n      \"scheduleDays\": [],\n      \"retryWindowMinutes\": 120,\n      \"retryIntervalMinutes\": 15,\n      \"offlineBehavior\": \"RETRY_IN_WINDOW\",\n      \"overdueAlertHours\": 26,\n      \"rowVersion\": 2,\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n    }\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Set Account Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Set Account Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/settlement-policy",
+                "description": "Sets the account-level end-of-day policy (every store and device without its own setting follows it).\n\nBody — the level's FULL setting (a lower level replaces the one above it entirely): `mode` (`MANUAL` | `SCHEDULED` | `DEVICE_AUTO`), `scheduleTime` (`HH:mm`, required for `SCHEDULED`, not allowed otherwise), `timeZone` (IANA, default `Europe/Istanbul`), `scheduleDays` (`MON` … `SUN`, `SCHEDULED` only; empty = every day), `retryWindowMinutes` (5–720, default 120), `retryIntervalMinutes` (1–120, default 15, smaller than the window), `offlineBehavior` (`RETRY_IN_WINDOW` | `ALERT_IMMEDIATELY`), `overdueAlertHours` (1–168; leave it out to disable), `expectedRowVersion` (the `rowVersion` you read; leave it out for last write wins — a stale value is `409 physical_pos.version_conflict`). Integers are JSON integers. A rule violation is `400 physical_pos.settlement.policy_invalid` (`details.field`, `details.reason`).\n\n**Scope:** `physical_pos:manage`. Shares the end-of-day write limit (30 per minute per API key) with `Start End-of-Day`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mode\": \"SCHEDULED\",\n  \"scheduleTime\": \"23:30\",\n  \"timeZone\": \"Europe/Istanbul\",\n  \"scheduleDays\": [],\n  \"retryWindowMinutes\": 120,\n  \"retryIntervalMinutes\": 15,\n  \"offlineBehavior\": \"RETRY_IN_WINDOW\",\n  \"overdueAlertHours\": 26\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reset Account Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Reset Account Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/settlement-policy",
+                "description": "Resets the account level to the default (`MANUAL`). `expectedRowVersion` (query, optional) is the `rowVersion` you read; without it the level is cleared unconditionally.\n\n**Scope:** `physical_pos:manage`. A TEST key cannot write."
+              },
+              "response": []
+            },
+            {
+              "name": "List Stores",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Stores: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/stores?limit=25",
+                "description": "Your stores. Fills `pos_store_id` with the first row when the variable is empty (set it yourself to pick another store).\n\n**Filters:** `limit`, `cursor`, `includeTotal`, `status`, `q`.\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Store Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Store Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/stores/{{pos_store_id}}/settlement-policy",
+                "description": "The store-level override. `active: false` means the store's devices follow the account level.\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": []
+            },
+            {
+              "name": "Set Store Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Set Store Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/stores/{{pos_store_id}}/settlement-policy",
+                "description": "Sets a store-level policy; it replaces the account level for the store's devices.\n\nBody — the level's FULL setting (a lower level replaces the one above it entirely): `mode` (`MANUAL` | `SCHEDULED` | `DEVICE_AUTO`), `scheduleTime` (`HH:mm`, required for `SCHEDULED`, not allowed otherwise), `timeZone` (IANA, default `Europe/Istanbul`), `scheduleDays` (`MON` … `SUN`, `SCHEDULED` only; empty = every day), `retryWindowMinutes` (5–720, default 120), `retryIntervalMinutes` (1–120, default 15, smaller than the window), `offlineBehavior` (`RETRY_IN_WINDOW` | `ALERT_IMMEDIATELY`), `overdueAlertHours` (1–168; leave it out to disable), `expectedRowVersion` (the `rowVersion` you read; leave it out for last write wins — a stale value is `409 physical_pos.version_conflict`). Integers are JSON integers. A rule violation is `400 physical_pos.settlement.policy_invalid` (`details.field`, `details.reason`).\n\n**Scope:** `physical_pos:manage`. Shares the end-of-day write limit (30 per minute per API key) with `Start End-of-Day`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mode\": \"MANUAL\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Store Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Clear Store Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/stores/{{pos_store_id}}/settlement-policy",
+                "description": "Removes the store override; its devices follow the account level again. `expectedRowVersion` (query, optional) is the `rowVersion` you read; without it the level is cleared unconditionally.\n\n**Scope:** `physical_pos:manage`. A TEST key cannot write."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Device Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Get Device Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement-policy",
+                "description": "The device-level override. `active: false` means the device follows its store / account policy.\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": []
+            },
+            {
+              "name": "Set Device Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Set Device Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement-policy",
+                "description": "Sets a device-level policy. `DEVICE_AUTO` (the device closes the day itself and reports the result) is accepted only on devices that report their end-of-day results.\n\nBody — the level's FULL setting (a lower level replaces the one above it entirely): `mode` (`MANUAL` | `SCHEDULED` | `DEVICE_AUTO`), `scheduleTime` (`HH:mm`, required for `SCHEDULED`, not allowed otherwise), `timeZone` (IANA, default `Europe/Istanbul`), `scheduleDays` (`MON` … `SUN`, `SCHEDULED` only; empty = every day), `retryWindowMinutes` (5–720, default 120), `retryIntervalMinutes` (1–120, default 15, smaller than the window), `offlineBehavior` (`RETRY_IN_WINDOW` | `ALERT_IMMEDIATELY`), `overdueAlertHours` (1–168; leave it out to disable), `expectedRowVersion` (the `rowVersion` you read; leave it out for last write wins — a stale value is `409 physical_pos.version_conflict`). Integers are JSON integers. A rule violation is `400 physical_pos.settlement.policy_invalid` (`details.field`, `details.reason`).\n\n**Scope:** `physical_pos:manage`. Shares the end-of-day write limit (30 per minute per API key) with `Start End-of-Day`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"mode\": \"DEVICE_AUTO\",\n  \"overdueAlertHours\": 26\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Device Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Clear Device Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement-policy",
+                "description": "Removes the device override; the device follows its store / account policy again. `expectedRowVersion` (query, optional) is the `rowVersion` you read; without it the level is cleared unconditionally.\n\n**Scope:** `physical_pos:manage`. A TEST key cannot write."
+              },
+              "response": []
+            },
+            {
+              "name": "Preview Effective Policy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Preview Effective Policy: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement-policy/effective",
+                "description": "The policy `pos_device_id` actually follows: `sourceScopeType` (`ACCOUNT` | `STORE` | `DEVICE`), `policy`, `serverSettlementSupported`, `deviceAutoSupported`, `nextScheduledAt`, `lastSettlementAt`, `overdue` and `scheduleWarning` (`SCHEDULED_UNSUPPORTED`: the policy is `SCHEDULED` but the device cannot take end-of-day from the server).\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": [
+                {
+                  "name": "Effective",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/settlement-policy/effective"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"effective\": {\n      \"deviceId\": \"50000000-0000-4000-8000-000000000001\",\n      \"sourceScopeType\": \"ACCOUNT\",\n      \"policy\": {\n        \"scopeType\": \"ACCOUNT\",\n        \"storeId\": null,\n        \"deviceId\": null,\n        \"active\": true,\n        \"mode\": \"SCHEDULED\",\n        \"scheduleTime\": \"23:30\",\n        \"timeZone\": \"Europe/Istanbul\",\n        \"scheduleDays\": [],\n        \"retryWindowMinutes\": 120,\n        \"retryIntervalMinutes\": 15,\n        \"offlineBehavior\": \"RETRY_IN_WINDOW\",\n        \"overdueAlertHours\": 26,\n        \"rowVersion\": 2,\n        \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n      },\n      \"serverSettlementSupported\": true,\n      \"deviceAutoSupported\": false,\n      \"nextScheduledAt\": \"2026-01-02T20:30:00.000Z\",\n      \"lastSettlementAt\": null,\n      \"overdue\": false,\n      \"scheduleWarning\": null\n    }\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Terminal Providers",
+          "item": [
+            {
+              "name": "List Terminals",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Terminals: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/terminals?limit=25",
+                "description": "Your logical terminals. Fills `pos_terminal_id` with the first row when the variable is empty (set it yourself to pick another terminal).\n\n**Filters:** `limit`, `cursor`, `includeTotal`, `status`, `q`.\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": []
+            },
+            {
+              "name": "List Terminal Providers",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Terminal Providers: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/terminals/{{pos_terminal_id}}/providers?limit=25",
+                "description": "The terminal's payment-provider rows (for example a meal card provider's merchant, terminal and product code). Fills `pos_terminal_provider_id` with the first row when the variable is empty.\n\nEach row: `id` (send it as `terminalProviderId` when starting a `MEAL_CARD` payment on a terminal with several rows), `terminalId`, `environment`, `providerCode`, `vendorAccountId`, `merchantCode`, `terminalCode`, `productCode`, `label`, `providerStatus` (`ACTIVE` | `DISABLED`), `rowVersion`, `createdAt`, `updatedAt`.\n\n**Filters:** `limit`, `cursor`, `includeTotal`.\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": [
+                {
+                  "name": "Provider rows",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/terminals/{{pos_terminal_id}}/providers?limit=25"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"53000000-0000-4000-8000-000000000001\",\n        \"terminalId\": \"52000000-0000-4000-8000-000000000001\",\n        \"environment\": \"LIVE\",\n        \"providerCode\": \"METROPOL\",\n        \"vendorAccountId\": \"54000000-0000-4000-8000-000000000001\",\n        \"merchantCode\": \"1000000001\",\n        \"terminalCode\": \"2000000002\",\n        \"productCode\": \"3\",\n        \"label\": \"Meal card\",\n        \"providerStatus\": \"ACTIVE\",\n        \"rowVersion\": 1,\n        \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n        \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n      }\n    ],\n    \"pageInfo\": {\n      \"hasMore\": false,\n      \"nextCursor\": null,\n      \"totalCount\": null\n    }\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Add Terminal Provider",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Add Terminal Provider: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-provider:{{pos_terminal_id}}:{{pos_provider_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/terminals/{{pos_terminal_id}}/providers",
+                "description": "Adds a payment-provider row to `pos_terminal_id`. The provider comes from the payment-provider vendor account `pos_vendor_account_id` (same environment); there is no provider code in the body. The codes are the provider's (Metropol: 10-digit merchant and terminal codes, `productCode` required). The answer is `201 Created` with `{ provider, replayed }`.\n\nBody: `vendorAccountId`, `merchantCode`, `terminalCode`, optional `productCode`, `label`.\n\n**Idempotency-Key:** `pos-provider:{{pos_terminal_id}}:{{pos_provider_ref}}` (required). Send again → `200`, `replayed: true`; for another row change `pos_provider_ref`.\n\nWith provider rows in place, start a meal card sale with `instrument: MEAL_CARD`, `interaction` (`INSTRUMENT_READ`: the device reads the card, `CODE_DISPLAY`: the device shows the provider's QR / short code) and, when the terminal has several rows, `terminalProviderId`. Only `SALE` starts a meal card payment; `VOID` and `REFUND` work on it.\n\n**Scope:** `physical_pos:manage`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"vendorAccountId\": \"{{pos_vendor_account_id}}\",\n  \"merchantCode\": \"1000000001\",\n  \"terminalCode\": \"2000000002\",\n  \"productCode\": \"3\",\n  \"label\": \"Meal card\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Created",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-provider:{{pos_terminal_id}}:{{pos_provider_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/terminals/{{pos_terminal_id}}/providers",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"vendorAccountId\": \"{{pos_vendor_account_id}}\",\n  \"merchantCode\": \"1000000001\",\n  \"terminalCode\": \"2000000002\",\n  \"productCode\": \"3\",\n  \"label\": \"Meal card\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"provider\": {\n      \"id\": \"53000000-0000-4000-8000-000000000001\",\n      \"terminalId\": \"52000000-0000-4000-8000-000000000001\",\n      \"environment\": \"LIVE\",\n      \"providerCode\": \"METROPOL\",\n      \"vendorAccountId\": \"54000000-0000-4000-8000-000000000001\",\n      \"merchantCode\": \"1000000001\",\n      \"terminalCode\": \"2000000002\",\n      \"productCode\": \"3\",\n      \"label\": \"Meal card\",\n      \"providerStatus\": \"ACTIVE\",\n      \"rowVersion\": 1,\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 201,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Terminal Provider",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Update Terminal Provider: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/terminal-providers/{{pos_terminal_provider_id}}",
+                "description": "Changes a provider row's `label` (`null` clears it) or `status` (`ACTIVE` | `DISABLED`). The answer is `{ provider }`.\n\nBody: `rowVersion` (the row's, a JSON integer; a stale value is `409 physical_pos.version_conflict`), optional `label`, `status`. No `Idempotency-Key`.\n\n**Scope:** `physical_pos:manage`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rowVersion\": 1,\n  \"label\": \"Meal card\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Start Meal Card Sale",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Start Meal Card Sale: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "pos-meal-sale:{{pos_order_ref}}"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/payments",
+                "description": "Starts a meal card sale on `pos_device_id` through the provider row `pos_terminal_provider_id` (`List Terminal Providers`), with `merchantReference` = `pos_order_ref` + `-M`. The response is `202 Accepted` with `paymentStatus: NOT_STARTED`; follow the outcome with the `physical_pos.payment.*` webhooks or `Get Payment`. Stores `data.payment.paymentId` in `pos_payment_id`, so `Void` and `Refund Amount` then work on this sale (both are supported on a meal card sale).\n\nBody: `instrument: MEAL_CARD`, `interaction` — `CODE_DISPLAY` (the device shows the provider's QR / short code for the customer's app) or `INSTRUMENT_READ` (the device reads the card) — and `terminalProviderId`; leave `terminalProviderId` out when the terminal has exactly one active row for the method. Only `SALE` starts a meal card payment; do not send `installmentCount`, `items` or `terminalAcquirerId`. The QR / short code is shown on the device only; the API and the webhooks do not return it.\n\n- `422 physical_pos.payment.operation_unsupported` with `details.reason` `provider_terminal_ambiguous` (several rows: send `terminalProviderId`), `provider_terminal_missing` / `provider_terminal_not_found` (no matching active row) or `instrument_operation_unsupported` (not a `SALE`).\n\n**Idempotency-Key:** `pos-meal-sale:{{pos_order_ref}}` (required). Press Send again after a timeout or a `5xx`: the same key and body come back as `200`, `replayed: true`. For a new sale change `pos_order_ref`.\n\n**Scope:** `physical_pos:payments`. A TEST key gets `403 physical_pos.environment.test_key_read_only`.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4450\",\n  \"currency\": \"TRY\",\n  \"instrument\": \"MEAL_CARD\",\n  \"interaction\": \"CODE_DISPLAY\",\n  \"terminalProviderId\": \"{{pos_terminal_provider_id}}\",\n  \"merchantReference\": \"{{pos_order_ref}}-M\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Accepted",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Idempotency-Key",
+                        "value": "pos-meal-sale:{{pos_order_ref}}"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/payments",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"operation\": \"SALE\",\n  \"target\": {\n    \"deviceId\": \"{{pos_device_id}}\"\n  },\n  \"amountMinor\": \"4450\",\n  \"currency\": \"TRY\",\n  \"instrument\": \"MEAL_CARD\",\n  \"interaction\": \"CODE_DISPLAY\",\n  \"terminalProviderId\": \"{{pos_terminal_provider_id}}\",\n  \"merchantReference\": \"{{pos_order_ref}}-M\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Accepted",
+                  "code": 202,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"payment\": {\n      \"paymentId\": \"01900000-0000-7000-8000-0000000005a1\",\n      \"rootPaymentId\": \"01900000-0000-7000-8000-0000000005a1\",\n      \"originalPaymentId\": null,\n      \"origin\": \"API\",\n      \"operation\": \"SALE\",\n      \"paymentStatus\": \"NOT_STARTED\",\n      \"statusReason\": null,\n      \"deviceId\": \"50000000-0000-4000-8000-000000000001\",\n      \"amountMinor\": \"4450\",\n      \"approvedAmountMinor\": null,\n      \"currency\": \"TRY\",\n      \"installmentCount\": null,\n      \"instrument\": \"MEAL_CARD\",\n      \"merchantReference\": \"ORD-0001-M\",\n      \"createdAt\": \"2026-01-02T09:00:00.000Z\",\n      \"updatedAt\": \"2026-01-02T09:00:00.000Z\"\n    },\n    \"replayed\": false\n  },\n  \"statusCode\": 202,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
                 }
               ]
             }

@@ -467,8 +467,13 @@ List Payments, Find Payment by Reference, Cancel Payment, Void, Refund Amount,
 Refund Items, Get Reversal, Close Pre-authorisation, Cancel Pre-authorisation)
 a **Transactions & Reports** subfolder (List Transactions, List Uncertain
 Payments, Get Transaction, Sales Summary, Tax Summary, List End-of-Day Records)
-and a **Device Identity** subfolder (List Device Keys, Revoke Device Key, Revert
-Device Enrollment, Revoke Activation Code).
+a **Device Identity** subfolder (List Device Keys, Revoke Device Key, Revert
+Device Enrollment, Revoke Activation Code), an **End of Day** subfolder (Start
+End-of-Day, List End-of-Day Runs, Get End-of-Day Run, Get / Set / Reset Account
+Policy, List Stores, Get / Set / Clear Store Policy, Get / Set / Clear Device
+Policy, Preview Effective Policy) and a **Terminal Providers** subfolder (List
+Terminals, List Terminal Providers, Add Terminal Provider, Update Terminal
+Provider, Start Meal Card Sale).
 The folder is the same in both collections, and the main requests carry example
 responses (fake, masked values).
 
@@ -481,6 +486,22 @@ responses (fake, masked values).
   Key`, `Revert Device Enrollment` and `Revoke Activation Code` need
   `physical_pos:identity` and take no `Idempotency-Key`; activation codes are
   issued in the dashboard only.
+- **End of day**: `Start End-of-Day` needs `physical_pos:payments` and the
+  `Idempotency-Key` `pos-settlement:{{pos_device_id}}:{{pos_settlement_ref}}`
+  (change `pos_settlement_ref` for the next end-of-day); it answers `202` with the
+  `run`, the result follows on the run and in `List End-of-Day Records`. Policy
+  reads need `physical_pos:view`, policy writes (`PUT` / `DELETE`, no
+  `Idempotency-Key`) `physical_pos:manage`; a store or device setting replaces the
+  level above it entirely.
+- **Meal cards**: `Add Terminal Provider` (`physical_pos:manage`, `Idempotency-Key`
+  `pos-provider:{{pos_terminal_id}}:{{pos_provider_ref}}`, vendor account in
+  `pos_vendor_account_id`) adds the provider's merchant / terminal / product code to
+  a terminal; a `SALE` with `instrument: MEAL_CARD`, `interaction`
+  (`INSTRUMENT_READ` | `CODE_DISPLAY`) and, with several rows,
+  `terminalProviderId` then runs through it (`Start Meal Card Sale`, key
+  `pos-meal-sale:{{pos_order_ref}}`; it stores `pos_payment_id`, so `Void` and
+  `Refund Amount` then apply to it). The QR / short code is shown on the device
+  only.
 - **The key decides the environment**: a TEST key (`mk_test_…`) only reads;
   starting, reversing and cancelling get `403
   physical_pos.environment.test_key_read_only`.
@@ -500,8 +521,11 @@ responses (fake, masked values).
   physical_pos.payment.previous_outcome_unknown`.
 - **`UNKNOWN` means money may have been taken**: never start that payment again;
   `MANUAL_REVIEW` is resolved in the dashboard.
-- **Chained variables**: `List Devices` fills `pos_device_id` and `List Device
-  Keys` fills `pos_device_key_id` when they are empty;
+- **Chained variables**: `List Devices` fills `pos_device_id`, `List Device
+  Keys` `pos_device_key_id`, `List End-of-Day Runs` `pos_settlement_run_id`,
+  `List Stores` `pos_store_id`, `List Terminals` `pos_terminal_id` and `List
+  Terminal Providers` `pos_terminal_provider_id` when they are empty; `Start
+  End-of-Day` stores `pos_settlement_run_id`;
   `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start
   Pre-authorisation` stores `pos_preauth_payment_id`, and the reversal requests
   store `pos_reversal_payment_id`. An unmatched refund is not stored.
