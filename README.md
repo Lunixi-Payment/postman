@@ -465,8 +465,10 @@ Both payment collections have a **Physical POS** folder for
 Sale with Items, Start Pre-authorisation, Start Unmatched Refund, Get Payment,
 List Payments, Find Payment by Reference, Cancel Payment, Void, Refund Amount,
 Refund Items, Get Reversal, Close Pre-authorisation, Cancel Pre-authorisation)
-and a **Transactions & Reports** subfolder (List Transactions, List Uncertain
-Payments, Get Transaction, Sales Summary, Tax Summary, List End-of-Day Records).
+a **Transactions & Reports** subfolder (List Transactions, List Uncertain
+Payments, Get Transaction, Sales Summary, Tax Summary, List End-of-Day Records)
+and a **Device Identity** subfolder (List Device Keys, Revoke Device Key, Revert
+Device Enrollment, Revoke Activation Code).
 The folder is the same in both collections, and the main requests carry example
 responses (fake, masked values).
 
@@ -475,7 +477,10 @@ responses (fake, masked values).
 - **The key needs** the `PHYSICAL_POS` product (otherwise `403
   PRODUCT_NOT_ENABLED`) and `physical_pos:payments` to start, reverse and cancel
   payments. Reads take `physical_pos:view` or `physical_pos:payments`; `List
-  Devices` needs `physical_pos:view`.
+  Devices` and `List Device Keys` need `physical_pos:view`. `Revoke Device
+  Key`, `Revert Device Enrollment` and `Revoke Activation Code` need
+  `physical_pos:identity` and take no `Idempotency-Key`; activation codes are
+  issued in the dashboard only.
 - **The key decides the environment**: a TEST key (`mk_test_…`) only reads;
   starting, reversing and cancelling get `403
   physical_pos.environment.test_key_read_only`.
@@ -495,7 +500,8 @@ responses (fake, masked values).
   physical_pos.payment.previous_outcome_unknown`.
 - **`UNKNOWN` means money may have been taken**: never start that payment again;
   `MANUAL_REVIEW` is resolved in the dashboard.
-- **Chained variables**: `List Devices` fills `pos_device_id` when it is empty;
+- **Chained variables**: `List Devices` fills `pos_device_id` and `List Device
+  Keys` fills `pos_device_key_id` when they are empty;
   `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start
   Pre-authorisation` stores `pos_preauth_payment_id`, and the reversal requests
   store `pos_reversal_payment_id`. An unmatched refund is not stored.

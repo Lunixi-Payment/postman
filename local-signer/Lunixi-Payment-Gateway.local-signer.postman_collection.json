@@ -6186,7 +6186,7 @@
     },
     {
       "name": "Physical POS",
-      "description": "Physical POS payments (`/api/v1/physical-pos`, product `PHYSICAL_POS`): start a sale, pre-authorisation or unmatched refund on the POS device in your store, reverse it, cancel it before it reaches the device, and read payments, transactions, reports and end-of-day records. The card is read on the device; the API never takes card data.\n\n- **API key only.** Every route accepts the per-request Ed25519 signature only, reads included; the collection signs every gateway request. Unsigned is `401 AUTH_HEADERS_MISSING`.\n- **The key needs** the `PHYSICAL_POS` product (`403 PRODUCT_NOT_ENABLED` otherwise) and `physical_pos:payments` to start, reverse and cancel payments. Reads take `physical_pos:view` **or** `physical_pos:payments`; `List Devices` needs `physical_pos:view`. `physical_pos:manage` cannot make payments (`403 API_INSUFFICIENT_SCOPE`). `physical_pos:payments` is not added to existing keys automatically.\n- **The key decides the environment.** A TEST key (`mk_test_…`) only reads: start, reversal and cancel get `403 physical_pos.environment.test_key_read_only`, and its lists are empty. Sending `environment` is `400 physical_pos.input.environment_invalid`; `merchantId` or any other field the route does not take is `400 VALIDATION_ERROR`.\n- **Asynchronous.** Start and reversal return `202 Accepted` with `paymentStatus: NOT_STARTED` (a repeat with the same key `200`, `replayed: true`). The outcome comes with the `physical_pos.payment.*` webhooks (subscribe a `PHYSICAL_POS` endpoint to `physical_pos.*`) or `Get Payment`.\n- **Same key on retry.** `Idempotency-Key` (required on start and reversals) and `merchantReference` are built from `pos_order_ref`, `pos_payment_id`, `pos_preauth_payment_id` and `pos_refund_ref` — never from a random value. After a timeout or a `5xx`, press Send again without changing anything: the same key and body come back as `200`, `replayed: true` if the payment was opened, and no second payment is created. For a new sale change `pos_order_ref`; for a further refund on the same sale change `pos_refund_ref`. Always use the same `merchantReference` for the same sale, and do not send `allowDuplicateReference` after `409 physical_pos.payment.previous_outcome_unknown`.\n- **`UNKNOWN` means money may have been taken: never start that payment again.** `MANUAL_REVIEW` is resolved in the dashboard only.\n- **Device model support.** Partial refunds, several refunds on one sale, partial pre-authorisation closes and item refunds need the device model to support them (`422 physical_pos.payment.operation_unsupported`, `partial_amount_unsupported` / `itemized_unsupported`).\n- **Money is in minor units:** `4500` is 45.00 TRY. JSON integers in the API; strings in webhook payloads.\n- **Limit:** 120 payment writes per minute per API key (start, reversal and cancel together); `429 RATE_LIMITED` with `Retry-After`. Reads are not limited. Retry `503` errors with backoff and a limited number of attempts.\n- **Paging:** rows are `data.items`, paging is the top-level `pageInfo` (`hasMore`, `nextCursor`; `totalCount` is always `null`).\n- Starting a payment runs when a payment capability definition exists for the target device's model; otherwise `422 physical_pos.payment.operation_unsupported` (`details.reason`: `capability_undefined`) and no payment is created. Fiscal document webhook events are not produced at the moment.\n- Run `List Devices` first (fills `pos_device_id`). `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start Pre-authorisation` stores `pos_preauth_payment_id`; the reversal requests store the child in `pos_reversal_payment_id` (`Get Reversal`).\n\nError codes and what to do: https://docs.lunixi.com/physical-pos/errors",
+      "description": "Physical POS payments (`/api/v1/physical-pos`, product `PHYSICAL_POS`): start a sale, pre-authorisation or unmatched refund on the POS device in your store, reverse it, cancel it before it reaches the device, and read payments, transactions, reports and end-of-day records. The card is read on the device; the API never takes card data.\n\n- **API key only.** Every route accepts the per-request Ed25519 signature only, reads included; the collection signs every gateway request. Unsigned is `401 AUTH_HEADERS_MISSING`.\n- **The key needs** the `PHYSICAL_POS` product (`403 PRODUCT_NOT_ENABLED` otherwise) and `physical_pos:payments` to start, reverse and cancel payments. Reads take `physical_pos:view` **or** `physical_pos:payments`; `List Devices` needs `physical_pos:view`. `physical_pos:manage` cannot make payments (`403 API_INSUFFICIENT_SCOPE`). `physical_pos:payments` is not added to existing keys automatically.\n- **The key decides the environment.** A TEST key (`mk_test_…`) only reads: start, reversal and cancel get `403 physical_pos.environment.test_key_read_only`, and its lists are empty. Sending `environment` is `400 physical_pos.input.environment_invalid`; `merchantId` or any other field the route does not take is `400 VALIDATION_ERROR`.\n- **Asynchronous.** Start and reversal return `202 Accepted` with `paymentStatus: NOT_STARTED` (a repeat with the same key `200`, `replayed: true`). The outcome comes with the `physical_pos.payment.*` webhooks (subscribe a `PHYSICAL_POS` endpoint to `physical_pos.*`) or `Get Payment`.\n- **Same key on retry.** `Idempotency-Key` (required on start and reversals) and `merchantReference` are built from `pos_order_ref`, `pos_payment_id`, `pos_preauth_payment_id` and `pos_refund_ref` — never from a random value. After a timeout or a `5xx`, press Send again without changing anything: the same key and body come back as `200`, `replayed: true` if the payment was opened, and no second payment is created. For a new sale change `pos_order_ref`; for a further refund on the same sale change `pos_refund_ref`. Always use the same `merchantReference` for the same sale, and do not send `allowDuplicateReference` after `409 physical_pos.payment.previous_outcome_unknown`.\n- **`UNKNOWN` means money may have been taken: never start that payment again.** `MANUAL_REVIEW` is resolved in the dashboard only.\n- **Device model support.** Partial refunds, several refunds on one sale, partial pre-authorisation closes and item refunds need the device model to support them (`422 physical_pos.payment.operation_unsupported`, `partial_amount_unsupported` / `itemized_unsupported`).\n- **Money is in minor units:** `4500` is 45.00 TRY. JSON integers in the API; strings in webhook payloads.\n- **Limit:** 120 payment writes per minute per API key (start, reversal and cancel together); `429 RATE_LIMITED` with `Retry-After`. Reads are not limited. Retry `503` errors with backoff and a limited number of attempts.\n- **Paging:** rows are `data.items`, paging is the top-level `pageInfo` (`hasMore`, `nextCursor`; `totalCount` is always `null`).\n- Starting a payment runs when a payment capability definition exists for the target device's model; otherwise `422 physical_pos.payment.operation_unsupported` (`details.reason`: `capability_undefined`) and no payment is created. Fiscal document webhook events are not produced at the moment.\n- **Device identity** (`Device Identity` folder): `List Device Keys` needs `physical_pos:view`; `Revoke Device Key`, `Revert Device Enrollment` and `Revoke Activation Code` need `physical_pos:identity` and take no `Idempotency-Key`. Activation codes are issued in the dashboard only. `List Device Keys` fills `pos_device_key_id`.\n- Run `List Devices` first (fills `pos_device_id`). `Start Sale` / `Start Sale with Items` store `pos_payment_id`, `Start Pre-authorisation` stores `pos_preauth_payment_id`; the reversal requests store the child in `pos_reversal_payment_id` (`Get Reversal`).\n\nError codes and what to do: https://docs.lunixi.com/physical-pos/errors",
       "event": [
         {
           "listen": "test",
@@ -6217,6 +6217,7 @@
               "const posListed = [",
               "  [/\\/api\\/v1\\/physical-pos\\/devices$/, 'id', 'pos_device_id'],",
               "  [/\\/api\\/v1\\/physical-pos\\/payments$/, 'paymentId', 'pos_payment_id'],",
+              "  [/\\/api\\/v1\\/physical-pos\\/devices\\/[^/]+\\/keys$/, 'keyId', 'pos_device_key_id'],",
               "];",
               "for (const [route, field, variable] of posListed) {",
               "  if (pm.request.method === 'GET' && route.test(posRoute) && posFirstRow && typeof posFirstRow[field] === 'string' && !pm.environment.get(variable)) {",
@@ -7287,6 +7288,230 @@
                 "description": "End-of-day results per bank line: what the device reported (`reported`), what Lunixi's records give (`system`, card payments only) and `difference` (can be negative). `lineStatus`: `MATCHED`, `MISMATCH` or `UNMAPPED` (bank not recognised; not compared).\n\n**Filters:** `limit`, `cursor` (use as is), `createdFrom` / `createdTo`, `deviceId`, `lineStatus`.\n\n**Scope:** `physical_pos:view` or `physical_pos:payments`."
               },
               "response": []
+            }
+          ]
+        },
+        {
+          "name": "Device Identity",
+          "item": [
+            {
+              "name": "List Device Keys",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('List Device Keys: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/keys?limit=25",
+                "description": "The device's identity keys, newest first: fingerprints only, never the public key. Fills `pos_device_key_id` with the first row when the variable is empty (set it yourself to pick another key).\n\nEach key: `keyId` (`pdk_` + 24 characters, not a UUID), `algorithm` (`ED25519`), `keyStatus` (`ACTIVE` | `SUPERSEDED` | `REVOKED`), `enrolledVia` (`PAIRING` | `ACTIVATION_CODE` | `ROTATION`), `fingerprint` (`XXXX-XXXX`, compare it with the one on the device screen), `lineageRootKeyId`, `rotatedFromKeyId`, `activatedAt`, `supersededAt`, `revokedAt`, `revokeReason`, `rowVersion` (send it to `Revoke Device Key`).\n\n**Filters:** `limit` (1–100), `cursor`.\n\n**Scope:** `physical_pos:view`."
+              },
+              "response": [
+                {
+                  "name": "Keys",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/keys?limit=25"
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"keyId\": \"pdk_Z3JlZW5Ub3dlcjQ1NjdBYmNk\",\n        \"algorithm\": \"ED25519\",\n        \"keyStatus\": \"ACTIVE\",\n        \"enrolledVia\": \"PAIRING\",\n        \"fingerprint\": \"7KQ2-M9XD\",\n        \"lineageRootKeyId\": \"pdk_Z3JlZW5Ub3dlcjQ1NjdBYmNk\",\n        \"rotatedFromKeyId\": null,\n        \"activatedAt\": \"2026-01-02T09:00:00.000Z\",\n        \"supersededAt\": null,\n        \"revokedAt\": null,\n        \"revokeReason\": null,\n        \"rowVersion\": 1\n      }\n    ],\n    \"pageInfo\": {\n      \"hasMore\": false,\n      \"nextCursor\": null,\n      \"totalCount\": null\n    }\n  },\n  \"pageInfo\": {\n    \"hasMore\": false,\n    \"nextCursor\": null,\n    \"totalCount\": null\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Revoke Device Key",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Revoke Device Key: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/keys/{{pos_device_key_id}}/revoke",
+                "description": "Revokes a device identity key (device lost or stolen, key compromised, device replaced). The device can no longer sign with it; a new key needs a new pairing in the dashboard. The answer carries the key, the device's `lifecycleStatus` after the write and `replayed` (`true` when the key was already revoked).\n\nBody: `rowVersion` — the key's `rowVersion` from `List Device Keys` (a JSON integer; replace `1` when the key changed: a stale value is `409 physical_pos.version_conflict`) — and `reasonCode`: `DEVICE_LOST`, `DEVICE_STOLEN`, `KEY_COMPROMISED`, `DEVICE_REPLACED`, `MERCHANT_REQUEST` or `OTHER` (anything else is `400 physical_pos.input.reason_code_invalid`). No `Idempotency-Key`.\n\n**Scope:** `physical_pos:identity`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rowVersion\": 1,\n  \"reasonCode\": \"DEVICE_LOST\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Revoked",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/keys/{{pos_device_key_id}}/revoke",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"rowVersion\": 1,\n  \"reasonCode\": \"DEVICE_LOST\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"key\": {\n      \"keyId\": \"pdk_Z3JlZW5Ub3dlcjQ1NjdBYmNk\",\n      \"algorithm\": \"ED25519\",\n      \"keyStatus\": \"REVOKED\",\n      \"enrolledVia\": \"PAIRING\",\n      \"fingerprint\": \"7KQ2-M9XD\",\n      \"lineageRootKeyId\": \"pdk_Z3JlZW5Ub3dlcjQ1NjdBYmNk\",\n      \"rotatedFromKeyId\": null,\n      \"activatedAt\": \"2026-01-02T09:00:00.000Z\",\n      \"supersededAt\": null,\n      \"revokedAt\": \"2026-01-02T10:00:00.000Z\",\n      \"revokeReason\": \"DEVICE_LOST\",\n      \"rowVersion\": 2\n    },\n    \"lifecycleStatus\": \"ACTIVE\",\n    \"replayed\": false\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Revert Device Enrollment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Revert Device Enrollment: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/keys/{{pos_device_key_id}}/revert-enrollment",
+                "description": "Undoes an enrollment made with an activation code that you do not recognise: revokes the key and suspends the device. The answer is the same as `Revoke Device Key`: `{ key, lifecycleStatus, replayed }`.\n\nBody: `reasonCode`: `NOT_MY_DEVICE`, `SUSPECTED_PHISHING`, `WRONG_DEVICE` or `OTHER`. No `rowVersion`, no `Idempotency-Key`.\n\n**Scope:** `physical_pos:identity`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reasonCode\": \"NOT_MY_DEVICE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Revoke Activation Code",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Revoke Activation Code: 2xx', function () {",
+                      "  pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/activation-code/revoke",
+                "description": "Revokes the device's open activation code so it can no longer be used to enroll a device. The answer is `{ deviceId, revokedAt, revokeReason }`. Activation codes are issued in the dashboard only; an API key cannot issue one.\n\nBody: `reasonCode`: `MERCHANT_REVOKED`, `DEVICE_LOST`, `DEVICE_STOLEN` or `OTHER`. No `Idempotency-Key`.\n\n**Scope:** `physical_pos:identity`. A TEST key cannot write.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reasonCode\": \"MERCHANT_REVOKED\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "Revoked",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": "{{base_url}}/api/v1/physical-pos/devices/{{pos_device_id}}/activation-code/revoke",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"reasonCode\": \"MERCHANT_REVOKED\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    }
+                  ],
+                  "body": "{\n  \"status\": \"success\",\n  \"code\": \"SUCCESS\",\n  \"message\": \"Success\",\n  \"data\": {\n    \"deviceId\": \"00000000-0000-0000-0000-000000000401\",\n    \"revokedAt\": \"2026-01-02T10:00:00.000Z\",\n    \"revokeReason\": \"MERCHANT_REVOKED\"\n  },\n  \"statusCode\": 200,\n  \"timestamp\": \"2026-01-02T09:00:00.000Z\",\n  \"requestId\": \"req_8c1f2e7a\"\n}"
+                }
+              ]
             }
           ]
         }

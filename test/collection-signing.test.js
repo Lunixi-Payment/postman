@@ -914,12 +914,24 @@ const POS_IDS = {
   unmatched: '01900000-0000-7000-8000-000000000503',
   reversal: '01900000-0000-7000-8000-000000000504',
   listed: '01900000-0000-7000-8000-000000000505',
+  deviceKey: 'pdk_AAAAAAAAAAAAAAAAAAAAAAAA',
 };
 function physicalPosReply(method, route, raw) {
   const lastPage = { hasMore: false, nextCursor: null, totalCount: null };
   let body = {};
   try { body = raw ? JSON.parse(raw) : {}; } catch (e) { body = {}; }
   if (method === 'GET' && route === '/devices') return { status: 200, data: { items: [{ id: POS_IDS.device }] }, pageInfo: lastPage };
+  // Device identity (contract: gateway physical-pos-device-identity.service.ts / .mapper.ts).
+  if (method === 'GET' && /^\/devices\/[^/]+\/keys$/.test(route)) {
+    return { status: 200, data: { items: [{ keyId: POS_IDS.deviceKey, keyStatus: 'ACTIVE', rowVersion: 1 }] }, pageInfo: lastPage };
+  }
+  if (method === 'POST' && /^\/devices\/[^/]+\/keys\/[^/]+\/(revoke|revert-enrollment)$/.test(route)) {
+    const keyId = route.split('/')[4];
+    return { status: 200, data: { key: { keyId, keyStatus: 'REVOKED', rowVersion: 2 }, lifecycleStatus: 'ACTIVE', replayed: false } };
+  }
+  if (method === 'POST' && /^\/devices\/[^/]+\/activation-code\/revoke$/.test(route)) {
+    return { status: 200, data: { deviceId: route.split('/')[2], revokedAt: '2026-01-02T10:00:00.000Z', revokeReason: body.reasonCode } };
+  }
   if (method === 'POST' && route === '/payments') {
     const ids = { SALE: POS_IDS.sale, PREAUTH_OPEN: POS_IDS.preauth, REFUND_UNMATCHED: POS_IDS.unmatched };
     const paymentId = ids[body.operation] || POS_IDS.sale;
@@ -944,10 +956,12 @@ function physicalPosReply(method, route, raw) {
   if (method === 'GET' && /^\/payments\/[^/]+$/.test(route)) return { status: 200, data: { payment: { paymentId: route.split('/')[2] } } };
   return { status: 200, data: {} };
 }
-// The Physical POS folder chains pos_device_id, pos_payment_id, pos_preauth_payment_id and
-// pos_reversal_payment_id itself; pos_order_ref and pos_refund_ref are filled by the user.
+// The Physical POS folder chains pos_device_id, pos_device_key_id, pos_payment_id,
+// pos_preauth_payment_id and pos_reversal_payment_id itself; pos_order_ref and pos_refund_ref
+// are filled by the user.
 const POS_ENVIRONMENT = {
   pos_device_id: '',
+  pos_device_key_id: '',
   pos_payment_id: '',
   pos_preauth_payment_id: '',
   pos_reversal_payment_id: '',
@@ -2640,6 +2654,8 @@ const POS_WRITE_KEYS = {
   'Cancel Pre-authorisation': 'pos-preauth-cancel:{{pos_preauth_payment_id}}',
 };
 const POS_KEY_REQUIRED = /\/api\/v1\/physical-pos\/payments(\/[^/]+\/reversals)?$/;
+// Device identity writes take no Idempotency-Key (the gateway route has none).
+const POS_KEYLESS_WRITES = ['Revoke Device Key', 'Revert Device Enrollment', 'Revoke Activation Code'];
 
 function physicalPosFolder(collection) {
   const folder = collection.item.find((node) => node.name === 'Physical POS');
@@ -2675,8 +2691,12 @@ test('Physical POS writes use stable keys and stable references, never a random 
   const folder = physicalPosFolder(loadCollection('standalone'));
   assert.doesNotMatch(JSON.stringify(folder), /\{\{\$(guid|timestamp|isoTimestamp|random[A-Za-z]*)\}\}/, 'no dynamic variable anywhere in the folder');
   const writes = requestItems(folder.item).filter((e) => e.item.request.method === 'POST');
-  assert.deepEqual(writes.map((e) => e.item.name).sort(), Object.keys(POS_WRITE_KEYS).sort());
+  assert.deepEqual(writes.map((e) => e.item.name).sort(), [...Object.keys(POS_WRITE_KEYS), ...POS_KEYLESS_WRITES].sort());
   for (const { item } of writes) {
+    if (POS_KEYLESS_WRITES.includes(item.name)) {
+      assert.equal(idempotencyHeaderOf(item), undefined, `${item.name}: no Idempotency-Key`);
+      continue;
+    }
     assert.equal(idempotencyHeaderOf(item), POS_WRITE_KEYS[item.name], `${item.name}: Idempotency-Key`);
     const body = JSON.parse(item.request.body.raw);
     if (Object.prototype.hasOwnProperty.call(body, 'merchantReference')) {
@@ -2748,6 +2768,13 @@ for (const profile of ['standalone', 'local-signer']) {
       assert.ok(first.some((hit) => hit.url === `/api/v1/physical-pos/payments/${POS_IDS.preauth}/reversals` && JSON.parse(hit.raw).operation === 'PREAUTH_CLOSE'), 'Close Pre-authorisation uses the started pre-authorisation');
       assert.ok(first.some((hit) => hit.url === `/api/v1/physical-pos/payments/${POS_IDS.reversal}`), 'Get Reversal reads the started reversal');
       assert.ok(!first.some((hit) => hit.url.includes(POS_IDS.unmatched)), 'an unmatched refund is not chained');
+      const keyRoot = `/api/v1/physical-pos/devices/${POS_IDS.device}/keys/${POS_IDS.deviceKey}`;
+      assert.ok(first.some((hit) => hit.method === 'POST' && hit.url === `${keyRoot}/revoke` && JSON.parse(hit.raw).reasonCode && Number.isInteger(JSON.parse(hit.raw).rowVersion)), 'Revoke Device Key uses the listed device and key');
+      assert.ok(first.some((hit) => hit.method === 'POST' && hit.url === `${keyRoot}/revert-enrollment`), 'Revert Device Enrollment uses the listed device and key');
+      assert.ok(first.some((hit) => hit.method === 'POST' && hit.url === `/api/v1/physical-pos/devices/${POS_IDS.device}/activation-code/revoke`), 'Revoke Activation Code uses the listed device');
+      for (const hit of first.filter((h) => /\/devices\/[^/]+\/(keys\/[^/]+\/(revoke|revert-enrollment)|activation-code\/revoke)$/.test(h.url))) {
+        assert.equal(hit.idempotencyKey, undefined, `${hit.url}: no Idempotency-Key`);
+      }
       assert.deepEqual(tests.filter((t) => t.error), [], "the folder's own assertions pass");
     } finally {
       await teardown();
