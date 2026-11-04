@@ -161,6 +161,12 @@ block, `force3D: true` for 3D Secure (a stored card: `cardUserKey` + `cardToken`
 were removed; the Checkout Form card flow is unchanged.
 `Create Checkout Intent (Pre-authorization)` and
 `Direct Payment - Card Pre-authorization` show the typed `preauth: true` field.
+`Create Checkout Intent (Enabled Installments)` sends `enabledInstallments: [1, 2, 3]`:
+the hosted form offers at most 3 installments for this payment, and only the counts
+your panel settings, the card and the platform maximum also allow. Send `[1]` for a
+single payment only and leave the field out for no restriction; the list must hold
+distinct integers 1–36 including 1 (an empty list is a 400). `POST /api/v1/bin/installments`
+accepts the same optional `enabledInstallments` list to narrow the installment table.
 
 ## Promissory Notes and Reference
 
