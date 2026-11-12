@@ -204,6 +204,13 @@ up to it. A promissory-note schedule example carries literal note amounts and it
 them with `400 payment.amount.field_removed`. An installment fee is never part of
 `amount`: the system adds it when an installment quote is bound.
 
+The basket item of **Create Checkout Intent** carries the optional
+`productCategory` (`"MOBILE_PHONE"`), the Lunixi product category. It is used by
+payment methods with legal installment limits (e.g. shopping loan) and other
+platform features; every endpoint that takes basket items accepts it, and so
+does a payment link item. An unknown value is answered with 400; leave it out
+and nothing changes.
+
 ## Payment Links
 
 Both payment collections have a **Payment Links** folder for
